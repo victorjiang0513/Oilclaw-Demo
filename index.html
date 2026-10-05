@@ -1,0 +1,2725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OilClaw｜油价风险决策平台（静态演示）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+        * { font-family: 'Inter', 'Noto Sans SC', sans-serif; }
+
+        /* 油价变动滑块样式 */
+        #oilChangeInput {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #oilChangeInput::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        #oilChangeInput::-webkit-slider-thumb:hover {
+            background: #5568d3;
+            transform: scale(1.1);
+        }
+
+        #oilChangeInput::-webkit-slider-thumb:active {
+            background: #4c51bf;
+            transform: scale(1.15);
+        }
+
+        #oilChangeInput::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #oilChangeInput::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+        }
+
+        /* 滑块颜色动态 */
+        #oilChangeInput.bg-green-100::-webkit-slider-thumb {
+            background: #22c55e;
+        }
+        #oilChangeInput.bg-green-100::-moz-range-thumb {
+            background: #22c55e;
+        }
+
+        #oilChangeInput.bg-red-100::-webkit-slider-thumb {
+            background: #ef4444;
+        }
+        #oilChangeInput.bg-red-100::-moz-range-thumb {
+            background: #ef4444;
+        }
+
+        :root {
+            --primary-purple: #667eea;
+            --primary-dark: #4c51bf;
+            --primary-light: #9f7aea;
+            --bg-gray: #f8fafc;
+            --text-dark: #1a202c;
+            /* 护眼金融色系 - 降低饱和度 */
+            --success-green: #68D391;
+            --danger-red: #FC8181;
+            --warning-orange: #F6AD55;
+            --info-blue: #63B3ED;
+        }
+
+        body { background-color: var(--bg-gray); }
+        
+        /* 页面布局优化 - 增加间距 */
+        .card { margin-bottom: 24px; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-4 { padding: 1.25rem; }
+        
+        /* 字体大小优化 - 增大可读性 */
+        .text-xs { font-size: 0.8rem; }
+        .text-sm { font-size: 0.9rem; }
+        .text-base { font-size: 1rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        
+        /* 客户列表滚动效果 */
+        .client-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+        .client-scroll::-webkit-scrollbar { width: 6px; }
+        .client-scroll::-webkit-scrollbar-track { background: #f7fafc; }
+        .client-scroll::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        
+        /* 压力测试表格优化 */
+        .backtest-table { border-radius: 0; }
+        .backtest-table th { background: #f7fafc; font-weight: 600; }
+        .backtest-table td { border-bottom: 1px solid #e2e8f0; }
+        
+        .primary-purple { background-color: var(--primary-purple); }
+        .primary-text { color: var(--primary-purple); }
+        .success { color: var(--success-green); }
+        .danger { color: var(--danger-red); }
+        .warning { color: var(--warning-orange); }
+        .info { color: var(--info-blue); }
+
+        .header-nav {
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-dark) 100%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .nav-item {
+            color: rgba(255,255,255,0.85);
+            padding: 10px 16px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .nav-item:hover { background-color: rgba(255,255,255,0.15); color: white; }
+        .nav-item.active { background-color: rgba(255,255,255,0.2); color: white; font-weight: 600; }
+
+        @media (max-width: 767px) {
+            .mobile-nav-item { display: block; width: 100%; text-align: left; }
+        }
+
+        .tag { background-color: #edf2f7; color: #4a5568; padding: 4px 10px; border-radius: 16px; font-size: 12px; font-weight: 500; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .chart-container { position: relative; overflow: hidden; border-radius: 8px; background: #f8fafc; }
+        .chart-container img { width: 100%; height: auto; }
+
+        /* 智能报告页面的OpenClaw风格 */
+        .report-layout {
+            display: flex;
+            height: calc(100vh - 140px);
+            gap: 0;
+        }
+
+        .report-sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .report-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .typing-dot { animation: bounce 1.4s infinite ease-in-out; display: inline-block; width: 8px; height: 8px; background: #a0aec0; border-radius: 50%; margin: 0 2px; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* 功能卡片箭头连接 */
+        .module-chain {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 0;
+        }
+
+        .module-chain .feature-card {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .arrow-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            flex-shrink: 0;
+            padding-top: 20px;
+        }
+
+        .arrow-connector::after {
+            content: '→';
+            font-size: 32px;
+            color: #9ca3af;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        /* 响应式：小屏幕换行 */
+        @media (max-width: 900px) {
+            .module-chain {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .arrow-connector {
+                display: none;
+            }
+        }
+
+        /* 卡片悬停浮动效果 */
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        .feature-card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        .card-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* 六层架构箭头 */
+        .arch-item {
+            position: relative;
+            display: inline-block;
+        }
+
+        .arch-item:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -32px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: #9ca3af;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        /* 响应式：小屏幕隐藏箭头 */
+        @media (max-width: 768px) {
+            .arch-item:not(:last-child)::after {
+                display: none;
+            }
+        }
+
+        /* 隐藏滚动条但保持滚动功能 */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .hide-scrollbar:hover {
+            -ms-overflow-style: auto;
+            scrollbar-width: auto;
+        }
+
+        /* 英文副标题样式 */
+        .en-subtitle {
+            font-size: 0.75rem;
+            color: #718096;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        /* 因子滚动条自动滚动动画 */
+        @keyframes tickerScroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .ticker-container {
+            overflow: hidden;
+        }
+
+        .ticker-content {
+            display: flex;
+            flex-wrap: nowrap;
+            animation: tickerScroll 45s linear infinite;
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            min-width: max-content;
+        }
+
+        .ticker-content:hover {
+            animation-play-state: paused;
+        }
+
+        .ticker-items > div {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transform: translateZ(0);
+            white-space: nowrap;
+        }
+
+        /* 提示框样式 */
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 4px;
+            position: relative;
+        }
+
+        .tooltip-icon::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1f2937;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: normal;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip-icon:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="bg-amber-50 text-amber-900 border-b border-amber-200 px-4 py-2 text-center text-xs md:text-sm">
+        <strong>静态演示版</strong> · 页面展示历史项目材料与预设情景，不连接实时数据、模型服务或 AI 服务。
+    </div>
+    <!-- 油价因子指标滚动条 -->
+    <div class="bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 py-3 border-b border-slate-700">
+        <!-- 因子指标自动滚动 -->
+        <div class="ticker-container px-6">
+            <div class="ticker-content">
+                <!-- 第一组因子指标 -->
+                <div class="flex items-center space-x-8 ticker-items">
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">美元指数</span>
+                            <span class="text-gray-500 text-[10px]">USD Index</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">105.2</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">PMI制造业</span>
+                            <span class="text-gray-500 text-[10px]">PMI Mfg</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">50.8</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">政策利率</span>
+                            <span class="text-gray-500 text-[10px]">Policy Rate</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">5.25%</span>
+                        <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">库存水平</span>
+                            <span class="text-gray-500 text-[10px]">Inventory</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">4.35亿桶</span>
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">OPEC产量</span>
+                            <span class="text-gray-500 text-[10px]">OPEC Output</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">27.2百万桶/日</span>
+                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">地缘风险指数</span>
+                            <span class="text-gray-500 text-[10px]">Geopolitical Risk</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">中等</span>
+                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">美元流动性</span>
+                            <span class="text-gray-500 text-[10px]">USD Liquidity</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">宽松</span>
+                        <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">CDS利差</span>
+                            <span class="text-gray-500 text-[10px]">CDS Spread</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">82bps</span>
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">WTI原油</span>
+                            <span class="text-gray-500 text-[10px]">WTI Crude</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">$78.52</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">布伦特原油</span>
+                            <span class="text-gray-500 text-[10px]">Brent Crude</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">$82.37</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                </div>
+                <!-- 第二组因子指标（用于无缝循环） -->
+                <div class="flex items-center space-x-8 ticker-items">
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">美元指数</span>
+                            <span class="text-gray-500 text-[10px]">USD Index</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">105.2</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">PMI制造业</span>
+                            <span class="text-gray-500 text-[10px]">PMI Mfg</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">50.8</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">政策利率</span>
+                            <span class="text-gray-500 text-[10px]">Policy Rate</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">5.25%</span>
+                        <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">库存水平</span>
+                            <span class="text-gray-500 text-[10px]">Inventory</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">4.35亿桶</span>
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">OPEC产量</span>
+                            <span class="text-gray-500 text-[10px]">OPEC Output</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">27.2百万桶/日</span>
+                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">地缘风险指数</span>
+                            <span class="text-gray-500 text-[10px]">Geopolitical Risk</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">中等</span>
+                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">美元流动性</span>
+                            <span class="text-gray-500 text-[10px]">USD Liquidity</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">宽松</span>
+                        <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">CDS利差</span>
+                            <span class="text-gray-500 text-[10px]">CDS Spread</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">82bps</span>
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">WTI原油</span>
+                            <span class="text-gray-500 text-[10px]">WTI Crude</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">$78.52</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center space-x-3 flex-shrink-0 hover:bg-white/5 transition px-4 py-2 rounded cursor-pointer" onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                        <div class="flex flex-col">
+                            <span class="text-gray-400 text-xs font-normal">布伦特原油</span>
+                            <span class="text-gray-500 text-[10px]">Brent Crude</span>
+                        </div>
+                        <span class="text-white font-semibold text-base">$82.37</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="header-nav sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
+                            <i class="fa fa-line-chart text-purple-600"></i>
+                        </div>
+                        <div class="flex items-end">
+                            <span class="text-white font-bold text-lg relative pr-4">
+                                OilClaw
+                                <span class="absolute -top-1 -right-0 text-[10px] text-white font-bold rounded-full border border-white w-3 h-3 flex items-center justify-center bg-transparent">R</span>
+                            </span>
+                            <div class="h-[22px] border-l border-gray-300 mr-2"></div>
+                            <span class="text-white text-[11px] leading-none">石油AI智能风控体</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-1">
+                        <span class="nav-item active" data-section="overview" onclick="switchSection(this)">首页</span>
+                        <span class="nav-item" data-section="factor" onclick="switchSection(this)">因子池</span>
+                        <span class="nav-item" data-section="prediction" onclick="switchSection(this)">预测分析</span>
+                        <span class="nav-item" data-section="client" onclick="switchSection(this)">客户分析</span>
+                        <span class="nav-item" data-section="alert" onclick="switchSection(this)">预警</span>
+                        <span class="nav-item" data-section="report" onclick="switchSection(this)">智能报告</span>
+                        <span class="nav-item" data-section="compliance" onclick="switchSection(this)">合规性说明</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 text-white text-sm">
+                    <span class="hidden sm:inline"><i class="fa fa-clock-o mr-1"></i><span id="currentTime"></span></span>
+                    <button type="button" class="md:hidden rounded border border-white/30 px-3 py-2" aria-label="打开导航" aria-expanded="false" onclick="toggleMobileNav()">
+                        <i class="fa fa-bars"></i><span class="ml-2">菜单</span>
+                    </button>
+                </div>
+            </div>
+            <div id="mobileNav" class="hidden md:hidden border-t border-white/20 pb-3">
+                <button class="nav-item mobile-nav-item active" data-section="overview" onclick="switchSection(this)">首页</button>
+                <button class="nav-item mobile-nav-item" data-section="factor" onclick="switchSection(this)">因子池</button>
+                <button class="nav-item mobile-nav-item" data-section="prediction" onclick="switchSection(this)">预测分析</button>
+                <button class="nav-item mobile-nav-item" data-section="client" onclick="switchSection(this)">客户分析</button>
+                <button class="nav-item mobile-nav-item" data-section="alert" onclick="switchSection(this)">预警</button>
+                <button class="nav-item mobile-nav-item" data-section="report" onclick="switchSection(this)">智能报告</button>
+                <button class="nav-item mobile-nav-item" data-section="compliance" onclick="switchSection(this)">合规性说明</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6">
+        
+        <!-- 首页 -->
+        <section id="overview" class="section active">
+            <!-- 价值主张 Hero Section -->
+            <div class="mb-8">
+                <div class="card p-8 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white border-0 shadow-2xl">
+                    <div class="max-w-4xl mx-auto text-center">
+                        <h1 class="text-2xl md:text-3xl font-bold mb-2">
+                            油价波动量化决策支持系统
+                        </h1>
+                        <p class="text-lg md:text-xl text-purple-300 mb-8 font-medium">
+                            Oil Price Quantitative Decision Support System
+                        </p>
+                        <h2 class="text-lg md:text-xl font-semibold mb-2">
+                            为花旗银行前台交易、中台风控、后台信贷提供一体化决策支持
+                        </h2>
+                        <p class="text-base md:text-lg text-purple-300 font-normal">
+                            Integrated decision support for Citibank Front Desk Trading, Mid-Office Risk, and Back Office Credit
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能模块链 - 四个模块用箭头连接 -->
+            <div class="module-chain mb-8">
+                <!-- 因子池分析 -->
+                <div class="feature-card card p-5 bg-white cursor-pointer border-2 border-gray-200 hover:border-amber-400"
+                     onclick="switchSection(document.querySelector('[data-section=factor]'))">
+                    <div class="flex items-center justify-center mb-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center card-icon">
+                            <i class="fa fa-sitemap text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 text-center mb-1">因子池分析</h3>
+                    <p class="text-xs text-gray-400 text-center mb-3">Factor Pool Analysis</p>
+                    <div class="space-y-1.5 text-xs mb-3">
+                        <div class="text-center">
+                            <div class="text-gray-500">• 动态因子提取</div>
+                            <div class="text-gray-400 text-[10px]">Dynamic Factor Extraction</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 因果网络发现</div>
+                            <div class="text-gray-400 text-[10px]">Causal Network Discovery</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 因子权重监测</div>
+                            <div class="text-gray-400 text-[10px]">Factor Weight Monitoring</div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-2">
+                        <div class="text-center text-gray-400 text-[10px]">识别核心驱动力</div>
+                        <div class="text-center text-gray-300 text-[9px]">Identify Core Drivers</div>
+                    </div>
+                </div>
+
+                <div class="arrow-connector"></div>
+
+                <!-- 前瞻性概率预测 -->
+                <div class="feature-card card p-5 bg-white cursor-pointer border-2 border-gray-200 hover:border-blue-400"
+                     onclick="switchSection(document.querySelector('[data-section=prediction]'))">
+                    <div class="flex items-center justify-center mb-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center card-icon">
+                            <i class="fa fa-area-chart text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 text-center mb-1">前瞻性概率预测</h3>
+                    <p class="text-xs text-gray-400 text-center mb-3">Probabilistic Forecasting</p>
+                    <div class="space-y-1.5 text-xs mb-3">
+                        <div class="text-center">
+                            <div class="text-gray-500">• 7/30/90预测带</div>
+                            <div class="text-gray-400 text-[10px]">7/30/90-Day Forecast Band</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 95%置信区间</div>
+                            <div class="text-gray-400 text-[10px]">95% Confidence Interval</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 样本内外验证</div>
+                            <div class="text-gray-400 text-[10px]">In/Out-of-Sample Validation</div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-2">
+                        <div class="text-center text-gray-400 text-[10px]">验证模型泛化能力</div>
+                        <div class="text-center text-gray-300 text-[9px]">Validate Model Generalization</div>
+                    </div>
+                </div>
+
+                <div class="arrow-connector"></div>
+
+                <!-- 业务影响分析 -->
+                <div class="feature-card card p-5 bg-white cursor-pointer border-2 border-gray-200 hover:border-green-400"
+                     onclick="switchSection(document.querySelector('[data-section=client]'))">
+                    <div class="flex items-center justify-center mb-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center card-icon">
+                            <i class="fa fa-building-o text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 text-center mb-1">业务影响分析</h3>
+                    <p class="text-xs text-gray-400 text-center mb-3">Business Impact Analysis</p>
+                    <div class="space-y-1.5 text-xs mb-3">
+                        <div class="text-center">
+                            <div class="text-gray-500">• 宏观信号映射</div>
+                            <div class="text-gray-400 text-[10px]">Macro Signal Mapping</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 偿债能力评估</div>
+                            <div class="text-gray-400 text-[10px]">Solvency Assessment</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 产业链测算</div>
+                            <div class="text-gray-400 text-[10px]">Industry Chain Calculation</div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-2">
+                        <div class="text-center text-gray-400 text-[10px]">覆盖全产业链</div>
+                        <div class="text-center text-gray-300 text-[9px]">Cover Entire Industry Chain</div>
+                    </div>
+                </div>
+
+                <div class="arrow-connector"></div>
+
+                <!-- 未来业务洞察 -->
+                <div class="feature-card card p-5 bg-white cursor-pointer border-2 border-gray-200 hover:border-purple-400"
+                     onclick="switchSection(document.querySelector('[data-section=report]'))">
+                    <div class="flex items-center justify-center mb-3">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-500 rounded-xl flex items-center justify-center card-icon">
+                            <i class="fa fa-lightbulb-o text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 text-center mb-1">未来业务洞察</h3>
+                    <p class="text-xs text-gray-400 text-center mb-3">Future Business Insights</p>
+                    <div class="space-y-1.5 text-xs mb-3">
+                        <div class="text-center">
+                            <div class="text-gray-500">• 信贷审批建议</div>
+                            <div class="text-gray-400 text-[10px]">Credit Approval Suggestions</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 对冲方案设计</div>
+                            <div class="text-gray-400 text-[10px]">Hedge Strategy Design</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-gray-500">• 风险管理建议</div>
+                            <div class="text-gray-400 text-[10px]">Risk Management Suggestions</div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-2">
+                        <div class="text-center text-gray-400 text-[10px]">生成可执行研报</div>
+                        <div class="text-center text-gray-300 text-[9px]">Generate Actionable Reports</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 查看详情按钮 -->
+            <div class="text-center mb-8">
+                <button id="toggleDetailsBtn" onclick="toggleOverviewDetails()"
+                        class="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-medium hover:opacity-90 transition shadow-lg flex items-center justify-center mx-auto">
+                    <i class="fa fa-chevron-down mr-2" id="toggleIcon"></i>
+                    <span id="toggleText">查看模型指标 · View Model Metrics</span>
+                </button>
+            </div>
+
+            <!-- 可折叠区域：模型指标 + 技术架构 -->
+            <div id="overviewDetails" class="hidden">
+                <!-- 简化版核心指标 -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="card p-4 text-center bg-white border-l-4 border-blue-500">
+                        <div class="flex items-center justify-center mb-1">
+                            <span class="text-xs text-gray-500">方向准确率</span>
+                            <span class="tooltip-icon ml-1" data-tooltip="正确预测涨跌方向的比例 · The percentage of correctly predicted directional changes">?</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mb-2">Directional Accuracy</div>
+                        <div class="text-2xl font-bold text-blue-600">67.62%</div>
+                        <div class="text-xs text-green-500 mt-1">↑ 优于基准 5.11pp</div>
+                        <div class="text-[10px] text-gray-400">Beat Benchmark</div>
+                    </div>
+                    <div class="card p-4 text-center bg-white border-l-4 border-green-500">
+                        <div class="flex items-center justify-center mb-1">
+                            <span class="text-xs text-gray-500">MAPE</span>
+                            <span class="tooltip-icon ml-1" data-tooltip="预测误差占实际值的百分比平均 · Average of percentage errors between predicted and actual values">?</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mb-2">Mean Absolute Percentage Error</div>
+                        <div class="text-2xl font-bold text-green-600">3.98%</div>
+                        <div class="text-xs text-gray-500 mt-1">优于随机游走</div>
+                        <div class="text-[10px] text-gray-400">Beat Random Walk</div>
+                    </div>
+                    <div class="card p-4 text-center bg-white border-l-4 border-purple-500">
+                        <div class="flex items-center justify-center mb-1">
+                            <span class="text-xs text-gray-500">MAE</span>
+                            <span class="tooltip-icon ml-1" data-tooltip="预测值与实际值差的绝对值平均 · Average of absolute differences between predicted and actual values">?</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mb-2">Mean Absolute Error</div>
+                        <div class="text-2xl font-bold text-purple-600">$2.79</div>
+                        <div class="text-xs text-gray-500 mt-1">优于随机游走</div>
+                        <div class="text-[10px] text-gray-400">Beat Random Walk</div>
+                    </div>
+                    <div class="card p-4 text-center bg-white border-l-4 border-amber-500">
+                        <div class="text-xs text-gray-500 mb-1">当前状态</div>
+                        <div class="text-[10px] text-gray-400 mb-2">Current State</div>
+                        <div class="text-2xl font-bold text-amber-600">中等波动</div>
+                        <div class="text-[10px] text-gray-400">Medium Volatility</div>
+                    </div>
+                </div>
+
+                <!-- 技术架构 -->
+                <div class="card p-6 mb-8">
+                    <h2 class="text-lg font-bold text-gray-900 mb-6">六层技术架构 Six-Layer Technical Architecture</h2>
+                    <div class="flex items-center justify-center flex-nowrap gap-4 overflow-x-auto pb-2">
+                        <div class="arch-item p-4 bg-white border-2 border-gray-200 rounded-lg text-center min-w-[160px]">
+                            <div class="font-semibold text-gray-800 mb-1">DFM</div>
+                            <div class="text-xs text-gray-600">动态因子提纯<br>Dynamic Factors</div>
+                        </div>
+                        <div class="arch-item p-4 bg-white border-2 border-gray-200 rounded-lg text-center min-w-[160px]">
+                            <div class="font-semibold text-gray-800 mb-1">PCMCI</div>
+                            <div class="text-xs text-gray-600">因果发现<br>Causal Discovery</div>
+                        </div>
+                        <div class="arch-item p-4 bg-white border-2 border-gray-200 rounded-lg text-center min-w-[160px]">
+                            <div class="font-semibold text-gray-800 mb-1">HMM</div>
+                            <div class="text-xs text-gray-600">状态识别<br>Regime Detection</div>
+                        </div>
+                        <div class="arch-item p-4 bg-white border-2 border-blue-400 rounded-lg text-center min-w-[160px]">
+                            <div class="font-semibold text-blue-700 mb-1">Mamba-MoE</div>
+                            <div class="text-xs text-gray-600">核心预测<br>Core Prediction</div>
+                        </div>
+                        <div class="arch-item p-4 bg-white border-2 border-gray-200 rounded-lg text-center min-w-[160px]">
+                            <div class="font-semibold text-gray-800 mb-1">SHAP</div>
+                            <div class="text-xs text-gray-600">因子归因分析<br>Factor Attribution</div>
+                        </div>
+                        <div class="arch-item p-4 bg-white border-2 border-gray-200 rounded-lg text-center min-w-[160px]">
+                            <div class="font-semibold text-gray-800 mb-1">回测</div>
+                            <div class="text-xs text-gray-600">策略验证<br>Backtesting</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 因子池 -->
+        <section id="factor" class="section">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">因子池分析</h2>
+            <p class="en-subtitle mb-6">Factor Pool Analysis</p>
+
+            <!-- DFM说明 -->
+            <div class="card p-5 mb-6 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h3 class="font-semibold text-gray-900 mb-2">动态因子模型 (DFM)</h3>
+                <p class="text-xs text-gray-400 mb-3">Dynamic Factor Model</p>
+                <div class="text-xs text-gray-700 space-y-2">
+                    <p>DFM是一种统计降维技术，从16个高维宏观指标中提取出10个低维核心因子，保留原始数据的主要信息和波动特征。</p>
+                    <p class="text-gray-400 mt-1">DFM is a statistical dimensionality reduction technique that extracts 10 low-dimensional core factors from 16 high-dimensional macro indicators, preserving the main information and volatility characteristics of the original data.</p>
+                </div>
+            </div>
+
+            <!-- 16个原始宏观因子 -->
+            <div class="card p-5 mb-6">
+                <h3 class="font-semibold text-gray-900 mb-3">16个原始宏观因子</h3>
+                <p class="text-xs text-gray-400 mb-4">16 Original Macro Indicators</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                    <!-- 供需类 -->
+                    <div class="bg-purple-50 rounded-lg p-3">
+                        <div class="text-purple-700 font-semibold mb-1">供需类</div>
+                        <div class="text-gray-500 text-[10px]">Supply & Demand</div>
+                        <div class="mt-2 space-y-1">
+                            <div class="text-gray-600">WTI原油</div>
+                            <div class="text-gray-500 text-[10px]">WTI Crude</div>
+                            <div class="text-gray-600">布伦特原油</div>
+                            <div class="text-gray-500 text-[10px]">Brent Crude</div>
+                            <div class="text-gray-600">OPEC产量</div>
+                            <div class="text-gray-500 text-[10px]">OPEC Output</div>
+                            <div class="text-gray-600">库存水平</div>
+                            <div class="text-gray-500 text-[10px]">Inventory</div>
+                        </div>
+                    </div>
+
+                    <!-- 经济类 -->
+                    <div class="bg-blue-50 rounded-lg p-3">
+                        <div class="text-blue-700 font-semibold mb-1">经济类</div>
+                        <div class="text-gray-500 text-[10px]">Economic</div>
+                        <div class="mt-2 space-y-1">
+                            <div class="text-gray-600">SP500指数</div>
+                            <div class="text-gray-500 text-[10px]">SP500 Index</div>
+                            <div class="text-gray-600">道琼斯指数</div>
+                            <div class="text-gray-500 text-[10px]">DJIA Index</div>
+                            <div class="text-gray-600">中国PMI</div>
+                            <div class="text-gray-500 text-[10px]">China PMI</div>
+                            <div class="text-gray-600">美国PMI</div>
+                            <div class="text-gray-500 text-[10px]">US PMI</div>
+                        </div>
+                    </div>
+
+                    <!-- 货币类 -->
+                    <div class="bg-green-50 rounded-lg p-3">
+                        <div class="text-green-700 font-semibold mb-1">货币类</div>
+                        <div class="text-gray-500 text-[10px]">Monetary</div>
+                        <div class="mt-2 space-y-1">
+                            <div class="text-gray-600">美元指数</div>
+                            <div class="text-gray-500 text-[10px]">USD Index</div>
+                            <div class="text-gray-600">美元汇率</div>
+                            <div class="text-gray-500 text-[10px]">USDCNY</div>
+                            <div class="text-gray-600">美债2Y</div>
+                            <div class="text-gray-500 text-[10px]">US 2Y Treasury</div>
+                            <div class="text-gray-600">M1-M2价差</div>
+                            <div class="text-gray-500 text-[10px]">M2_M1 Spread</div>
+                        </div>
+                    </div>
+
+                    <!-- 需求类 -->
+                    <div class="bg-orange-50 rounded-lg p-3">
+                        <div class="text-orange-700 font-semibold mb-1">需求类</div>
+                        <div class="text-gray-500 text-[10px]">Demand</div>
+                        <div class="mt-2 space-y-1">
+                            <div class="text-gray-600">胜利油价</div>
+                            <div class="text-gray-500 text-[10px]">Shengli Price</div>
+                            <div class="text-gray-600">挖掘机同比</div>
+                            <div class="text-gray-500 text-[10px]">Excavator YoY</div>
+                        </div>
+                    </div>
+
+                    <!-- 风险类 -->
+                    <div class="bg-red-50 rounded-lg p-3">
+                        <div class="text-red-700 font-semibold mb-1">风险类</div>
+                        <div class="text-gray-500 text-[10px]">Risk</div>
+                        <div class="mt-2 space-y-1">
+                            <div class="text-gray-600">VIX指数</div>
+                            <div class="text-gray-500 text-[10px]">VIX Index</div>
+                            <div class="text-gray-600">地缘风险</div>
+                            <div class="text-gray-500 text-[10px]">Geopolitical Risk</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10个核心因子 -->
+            <div class="card p-5 mb-6">
+                <h3 class="font-semibold text-gray-900 mb-3">10个核心因子</h3>
+                <p class="text-xs text-gray-400 mb-4">10 Core Factors (Click for Details)</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-purple-400 transition" onclick="toggleFactorDetail('factor1')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-purple-700 font-semibold text-sm">Factor 01</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">WTI+OPEC因子</div>
+                        <div class="text-gray-400 text-[10px]">WTI+OPEC Factor</div>
+                        <div id="factor1" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">主要由WTI原油和OPEC产量构成，反映供需基本面。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Mainly composed of WTI Crude and OPEC Output, reflecting supply-demand fundamentals.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-blue-400 transition" onclick="toggleFactorDetail('factor2')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-blue-700 font-semibold text-sm">Factor 02</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">SP500+DJIA因子</div>
+                        <div class="text-gray-400 text-[10px]">SP500+DJIA Factor</div>
+                        <div id="factor2" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由美股市场指数构成，反映市场情绪和风险偏好。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of US stock market indices, reflecting market sentiment and risk appetite.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-red-400 transition" onclick="toggleFactorDetail('factor3')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-red-700 font-semibold text-sm">Factor 03</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">GPR+美元因子</div>
+                        <div class="text-gray-400 text-[10px]">GPR+USD Factor</div>
+                        <div id="factor3" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由地缘风险指数和美元指数构成，反映外部冲击和汇率影响。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of Geopolitical Risk Index and USD Index, reflecting external shocks and exchange rate impacts.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-orange-400 transition" onclick="toggleFactorDetail('factor4')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-orange-700 font-semibold text-sm">Factor 04</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">USDCNY+US2Y因子</div>
+                        <div class="text-gray-400 text-[10px]">USDCNY+US2Y Factor</div>
+                        <div id="factor4" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由美元汇率和美债收益率构成，反映货币政策和汇率预期。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of USDCNY and US Treasury yields, reflecting monetary policy and exchange rate expectations.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition" onclick="toggleFactorDetail('factor5')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-green-700 font-semibold text-sm">Factor 05</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">VIX+美元因子</div>
+                        <div class="text-gray-400 text-[10px]">VIX+USD Factor</div>
+                        <div id="factor5" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由VIX指数和美元指数构成，反映市场波动率和避险情绪。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of VIX Index and USD Index, reflecting market volatility and risk-off sentiment.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-teal-400 transition" onclick="toggleFactorDetail('factor6')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-teal-700 font-semibold text-sm">Factor 06</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">M2_M1+美元因子</div>
+                        <div class="text-gray-400 text-[10px]">M2_M1+USD Factor</div>
+                        <div id="factor6" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由M1-M2价差和美元指数构成，反映流动性状况和货币政策预期。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of M2_M1 Spread and USD Index, reflecting liquidity conditions and monetary policy expectations.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-yellow-400 transition" onclick="toggleFactorDetail('factor7')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-yellow-700 font-semibold text-sm">Factor 07</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">PMI_China+美元因子</div>
+                        <div class="text-gray-400 text-[10px]">PMI_China+USD Factor</div>
+                        <div id="factor7" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由中国PMI和美元指数构成，反映中国经济基本面和外部汇率因素。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of China PMI and USD Index, reflecting China's economic fundamentals and external exchange rate factors.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-indigo-400 transition" onclick="toggleFactorDetail('factor8')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-indigo-700 font-semibold text-sm">Factor 08</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">PMI_US+美元因子</div>
+                        <div class="text-gray-400 text-[10px]">PMI_US+USD Factor</div>
+                        <div id="factor8" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由美国PMI和美元指数构成，反映美国经济基本面和汇率预期。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of US PMI and USD Index, reflecting US economic fundamentals and exchange rate expectations.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-pink-400 transition" onclick="toggleFactorDetail('factor9')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-pink-700 font-semibold text-sm">Factor 09</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">挖掘机同比+美元因子</div>
+                        <div class="text-gray-400 text-[10px]">Excavator YoY+USD Factor</div>
+                        <div id="factor9" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由挖掘机销量同比和美元指数构成，反映中国基建需求和外部因素。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of Excavator YoY and USD Index, reflecting China infrastructure demand and external factors.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-cyan-400 transition" onclick="toggleFactorDetail('factor10')">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-cyan-700 font-semibold text-sm">Factor 10</span>
+                            <i class="fa fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                        <div class="text-gray-600 text-xs mb-1">挖掘机+US2Y因子</div>
+                        <div class="text-gray-400 text-[10px]">Excavator+US2Y Factor</div>
+                        <div id="factor10" class="hidden mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-[10px] text-gray-500">由挖掘机销量和美债收益率构成，反映中国需求和美国货币政策。</p>
+                            <p class="text-[9px] text-gray-400 mt-1">Composed of Excavator sales and US Treasury yields, reflecting China demand and US monetary policy.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 因子贡献度说明与载荷表 -->
+            <div class="card p-5 mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-gray-900">宏观因子载荷关系</h3>
+                    <p class="en-subtitle text-xs text-gray-400">Macro Factor Loadings</p>
+                </div>
+                <p class="text-xs text-gray-400 mb-4">Macro Factor Loadings Relationships</p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-2 py-2 text-left text-gray-600">核心因子 Core Factor</th>
+                                <th class="px-2 py-2 text-left text-gray-600">主要贡献指标 Main Contributor</th>
+                                <th class="px-2 py-2 text-left text-gray-600">载荷值 Loading</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 bg-purple-50">
+                                <td class="px-2 py-2 text-purple-700 font-semibold">Factor 01 <span class="text-gray-400 text-[10px]">WTI+OPEC</span></td>
+                                <td class="px-2 py-2 text-gray-600">WTI原油 <span class="text-gray-400 text-[10px]">WTI Crude</span></td>
+                                <td class="px-2 py-2 text-purple-600">0.504</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-blue-50">
+                                <td class="px-2 py-2 text-blue-700 font-semibold">Factor 02 <span class="text-gray-400 text-[10px]">SP500+DJIA</span></td>
+                                <td class="px-2 py-2 text-gray-600">SP500指数 <span class="text-gray-400 text-[10px]">SP500 Index</span></td>
+                                <td class="px-2 py-2 text-blue-600">0.695</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-red-50">
+                                <td class="px-2 py-2 text-red-700 font-semibold">Factor 03 <span class="text-gray-400 text-[10px]">GPR+美元</span></td>
+                                <td class="px-2 py-2 text-gray-600">地缘风险指数 <span class="text-gray-400 text-[10px]">Geopolitical Risk</span></td>
+                                <td class="px-2 py-2 text-red-600">0.521</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-green-50">
+                                <td class="px-2 py-2 text-green-700 font-semibold">Factor 05 <span class="text-gray-400 text-[10px]">VIX+美元</span></td>
+                                <td class="px-2 py-2 text-gray-600">VIX指数 <span class="text-gray-400 text-[10px]">VIX Index</span></td>
+                                <td class="px-2 py-2 text-green-600">0.658</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-orange-50">
+                                <td class="px-2 py-2 text-orange-700 font-semibold">Factor 04 <span class="text-gray-400 text-[10px]">USDCNY+US2Y</span></td>
+                                <td class="px-2 py-2 text-gray-600">美元汇率 <span class="text-gray-400 text-[10px]">USDCNY</span></td>
+                                <td class="px-2 py-2 text-orange-600">0.487</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-teal-50">
+                                <td class="px-2 py-2 text-teal-700 font-semibold">Factor 06 <span class="text-gray-400 text-[10px]">M2_M1+美元</span></td>
+                                <td class="px-2 py-2 text-gray-600">M1-M2价差 <span class="text-gray-400 text-[10px]">M2_M1 Spread</span></td>
+                                <td class="px-2 py-2 text-teal-600">0.432</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-yellow-50">
+                                <td class="px-2 py-2 text-yellow-700 font-semibold">Factor 07 <span class="text-gray-400 text-[10px]">PMI_China+美元</span></td>
+                                <td class="px-2 py-2 text-gray-600">中国PMI <span class="text-gray-400 text-[10px]">China PMI</span></td>
+                                <td class="px-2 py-2 text-yellow-600">0.398</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-indigo-50">
+                                <td class="px-2 py-2 text-indigo-700 font-semibold">Factor 08 <span class="text-gray-400 text-[10px]">PMI_US+美元</span></td>
+                                <td class="px-2 py-2 text-gray-600">美国PMI <span class="text-gray-400 text-[10px]">US PMI</span></td>
+                                <td class="px-2 py-2 text-indigo-600">0.376</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-pink-50">
+                                <td class="px-2 py-2 text-pink-700 font-semibold">Factor 09 <span class="text-gray-400 text-[10px]">Excavator YoY+美元</span></td>
+                                <td class="px-2 py-2 text-gray-600">挖掘机同比 <span class="text-gray-400 text-[10px]">Excavator YoY</span></td>
+                                <td class="px-2 py-2 text-pink-600">0.342</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-cyan-50">
+                                <td class="px-2 py-2 text-cyan-700 font-semibold">Factor 10 <span class="text-gray-400 text-[10px]">Excavator+US2Y</span></td>
+                                <td class="px-2 py-2 text-gray-600">挖掘机销量 <span class="text-gray-400 text-[10px]">Excavator Sales</span></td>
+                                <td class="px-2 py-2 text-cyan-600">0.289</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 当前状态总结 -->
+            <div class="card p-5 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h3 class="font-semibold text-gray-900 mb-2">当前状态总结</h3>
+                <p class="text-xs text-gray-400 mb-4">Current Status Summary</p>
+                <div class="space-y-2 text-xs">
+                    <div class="flex items-start">
+                        <span class="w-2 h-2 rounded-full bg-purple-500 mt-1 mr-2"></span>
+                        <div>
+                            <div class="text-gray-700">核心驱动因子：</div>
+                            <div class="text-gray-600">Factor 02 (SP500+DJIA) 和 Factor 01 (WTI+OPEC) 对油价走势影响最大</div>
+                            <div class="text-xs text-gray-500 mt-1">Core Drivers: Factor 02 (SP500+DJIA) & Factor 01 (WTI+OPEC) have greatest impact on oil price trends</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 mt-1 mr-2"></span>
+                        <div>
+                            <div class="text-gray-700">市场状态：</div>
+                            <div class="text-gray-600">中等波动期，供需基本面对油价形成支撑，风险因子处于可控范围</div>
+                            <div class="text-xs text-gray-500 mt-1">Market Status: Medium volatility period, supply-demand fundamentals provide support to oil prices, risk factors within controllable range</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="w-2 h-2 rounded-full bg-green-500 mt-1 mr-2"></span>
+                        <div>
+                            <div class="text-gray-700">趋势展望：</div>
+                            <div class="text-gray-600">历史页面示例解读：因子组合用于演示市场分析思路，当前判断需用已核实数据重新计算。</div>
+                            <div class="text-xs text-gray-500 mt-1">Trend Outlook: Current factor combination indicates short-term consolidation with bullish bias, closely monitor Federal Reserve policy movements</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 预测分析 -->
+        <section id="prediction" class="section">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900">预测分析 Prediction Analysis</h2>
+            </div>
+            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">本页数字与图表是项目文件中的历史演示素材，口径尚未统一；不代表当前油价、已验证的未来预测或投资建议。</p>
+
+            <!-- 核心指标 -->
+            <div class="card p-6 bg-gradient-to-br from-blue-50 to-purple-100 border-4 border-blue-500 shadow-lg mb-6">
+                <h3 class="font-bold text-gray-900 text-lg mb-4 flex items-center">
+                    <i class="fa fa-trophy text-blue-600 mr-2"></i>
+                    核心指标 Core Metrics
+                </h3>
+                <div class="grid md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 bg-white rounded-lg">
+                        <div class="text-xs text-gray-500 mb-1">页面示例价格 Demo Value</div>
+                        <div class="text-3xl font-bold text-blue-700">$75.20</div>
+                        <div class="text-xs text-gray-400 mt-1">WTI Crude Oil</div>
+                    </div>
+                    <div class="text-center p-4 bg-white rounded-lg">
+                        <div class="text-xs text-gray-500 mb-1">一周后预测价格 One-Week Forecast Price</div>
+                        <div class="text-3xl font-bold text-purple-700">$76.8</div>
+                        <div class="text-xs text-green-600 mt-1">+1.60 (+2.1%)</div>
+                    </div>
+                    <div class="text-center p-4 bg-white rounded-lg">
+                        <div class="text-xs text-gray-500 mb-1">预测区间 Forecast Range</div>
+                        <div class="text-2xl font-bold text-blue-600">$73.5 - $77.2</div>
+                        <div class="text-xs text-gray-400 mt-1">95% 置信区间 Confidence Interval</div>
+                    </div>
+                    <div class="text-center p-4 bg-white rounded-lg">
+                        <div class="text-xs text-gray-500 mb-1">预测方向 Direction</div>
+                        <div class="text-3xl font-bold text-green-600">⬆️ 看涨 Rise</div>
+                        <div class="text-xs text-gray-500 mt-2 space-y-1">
+                            <div class="flex items-center justify-center">
+                                <span class="w-14 text-right text-xs">上涨 Rise</span>
+                                <div class="flex-1 mx-1 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-2 bg-green-500 rounded-full" style="width: 60%"></div>
+                                </div>
+                                <span class="w-7 text-left text-xs font-bold text-green-600">60%</span>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <span class="w-14 text-right text-xs">持平 Flat</span>
+                                <div class="flex-1 mx-1 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-2 bg-gray-400 rounded-full" style="width: 25%"></div>
+                                </div>
+                                <span class="w-7 text-left text-xs">25%</span>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <span class="w-14 text-right text-xs">下跌 Fall</span>
+                                <div class="flex-1 mx-1 h-2 bg-gray-200 rounded-full">
+                                    <div class="h-2 bg-red-400 rounded-full" style="width: 15%"></div>
+                                </div>
+                                <span class="w-7 text-left text-xs">15%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- In-Sample & Out-of-Sample Tab切换 -->
+            <div class="card p-6 mb-6">
+                <!-- Tab切换 -->
+                <div class="flex mb-6 border-b border-gray-200">
+                    <button onclick="switchPredictionTab('insample', this)" class="px-6 py-3 font-medium text-blue-600 border-b-2 border-blue-500 bg-blue-50 prediction-tab" id="tab-insample">
+                        <i class="fa fa-database mr-2"></i>
+                        <div>样本内拟合</div>
+                        <div class="text-xs text-gray-500">In-Sample Fit</div>
+                    </button>
+                    <button onclick="switchPredictionTab('outsample', this)" class="px-6 py-3 font-medium text-gray-500 hover:text-green-600 prediction-tab" id="tab-outsample">
+                        <i class="fa fa-line-chart mr-2"></i>
+                        <div>历史样本外测试</div>
+                        <div class="text-xs text-gray-500">Historical Out-of-Sample Test</div>
+                    </button>
+                </div>
+
+                <!-- In-Sample 内容 -->
+                <div id="content-insample" class="prediction-content">
+                    <div class="mb-4 text-sm text-gray-500">
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">训练数据 Training Data</span>
+                    </div>
+                    <div class="chart-container mb-4 cursor-pointer" onclick="openImageModal('output/L4_training.png', '样本内拟合 In-Sample Fit')">
+                        <img src="output/L4_training.png" alt="样本内拟合图 In-Sample Fit Chart" style="width: 100%; height: auto; max-height: 350px; object-fit: contain;">
+                        <div class="text-center text-xs text-gray-400 mt-2"><i class="fa fa-search-plus mr-1"></i>点击放大 Click to enlarge</div>
+                    </div>
+
+                    <!-- 统计量展示 -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="p-4 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg border-2 border-blue-300 text-center">
+                            <div class="text-xs text-gray-600 mb-2">拟合优度 R²</div>
+                            <div class="text-3xl font-bold text-blue-700 mb-1">0.85</div>
+                            <div class="text-xs text-blue-600">高拟合度</div>
+                            <div class="text-[10px] text-gray-400 mt-1">Goodness of Fit</div>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-lg border-2 border-indigo-300 text-center">
+                            <div class="text-xs text-gray-600 mb-2">训练MAE</div>
+                            <div class="text-3xl font-bold text-indigo-700 mb-1">$1.72</div>
+                            <div class="text-xs text-indigo-600">拟合误差小</div>
+                            <div class="text-[10px] text-gray-400 mt-1">Training MAE</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="flex items-start">
+                            <i class="fa fa-info-circle text-blue-600 mr-2 mt-0.5"></i>
+                            <div class="text-sm text-gray-700">
+                                <div class="font-semibold text-blue-700 mb-1">样本内说明</div>
+                        <div>此图展示训练与验证损失、门控熵等训练过程信息，不是油价预测值与实际值对比。</div>
+                                <div class="text-xs text-gray-500 mt-2">This chart shows training and validation loss plus gate entropy, not predicted versus actual oil prices.</div>
+                                <div class="text-xs text-gray-500 mt-2">Shows model fit on training data. Blue curve is predicted value, red dashed line is actual price. High fit indicates effective learning of historical patterns.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Out-of-Sample 内容 -->
+                <div id="content-outsample" class="prediction-content hidden">
+                    <div class="mb-4 text-sm text-gray-500">
+                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">测试数据 Test Data</span>
+                    </div>
+                    <div class="chart-container mb-4 cursor-pointer" onclick="openImageModal('output/L4_prediction.png', '样本外历史测试结果')">
+                        <img src="output/L4_prediction.png" alt="样本外历史测试结果" style="width: 100%; height: auto; max-height: 350px; object-fit: contain;">
+                        <div class="text-center text-xs text-gray-400 mt-2"><i class="fa fa-search-plus mr-1"></i>点击放大 Click to enlarge</div>
+                    </div>
+
+                    <!-- 统计量展示 -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg border-2 border-green-300 text-center">
+                            <div class="text-xs text-gray-600 mb-2">方向准确率</div>
+                            <div class="text-3xl font-bold text-green-700 mb-1">67.62%</div>
+                            <div class="text-xs text-green-600">↑ 优于基准 17.62pp</div>
+                            <div class="text-[10px] text-gray-400 mt-1">Directional Accuracy</div>
+                        </div>
+                        <div class="p-4 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg border-2 border-blue-300 text-center">
+                            <div class="text-xs text-gray-600 mb-2">MAPE</div>
+                            <div class="text-3xl font-bold text-blue-700 mb-1">3.98%</div>
+                            <div class="text-xs text-blue-600">优于行业平均(5%)</div>
+                            <div class="text-[10px] text-gray-400 mt-1">Mean Abs Percentage Error</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex items-start">
+                            <i class="fa fa-info-circle text-green-600 mr-2 mt-0.5"></i>
+                            <div class="text-sm text-gray-700">
+                                <div class="font-semibold text-green-700 mb-1">样本外说明</div>
+                                <div>展示模型对未见数据的预测能力。灰色实线为点预测，蓝色阴影为95%置信区间，红色虚线为实际值。这是模型真实预测能力的体现。</div>
+                                <div class="text-xs text-gray-500 mt-2 italic">Out-of-Sample Description: Shows model prediction capability on unseen data. Gray solid line is point prediction, blue shaded area is 95% confidence interval, red dashed line is actual value. Reflects real prediction ability.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 基准模型对比 -->
+            <div class="card p-6 mb-6">
+                <h3 class="font-semibold mb-4 flex items-center">
+                    <i class="fa fa-balance-scale text-purple-600 mr-2"></i>基准模型对比 Benchmark Comparison
+                </h3>
+                <div class="chart-container cursor-pointer" onclick="openImageModal('output/fig10_model_comparison copy.png', '基准模型对比 Benchmark Comparison')">
+                    <img src="output/fig10_model_comparison copy.png" alt="基准模型对比图 Benchmark Comparison" style="width: 100%; height: auto; max-height: 400px; object-fit: contain;">
+                    <div class="text-center text-xs text-gray-400 mt-2"><i class="fa fa-search-plus mr-1"></i>点击放大 Click to enlarge</div>
+                </div>
+                <div class="mt-4 grid md:grid-cols-2 gap-4">
+                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="flex items-start">
+                            <i class="fa fa-info-circle text-blue-600 mr-2 mt-0.5"></i>
+                            <div class="text-xs text-gray-700">
+                                <div class="font-semibold text-blue-700 mb-1">模型说明 Model Description</div>
+                                <div>Mamba-MoE采用专家混合架构，结合HMM状态门控，在复杂市场环境下表现优于传统时间序列模型。</div>
+                                <div class="text-xs text-gray-500 mt-2 italic">Mamba-MoE uses Mixture of Experts architecture, combined with HMM state gating. Outperforms traditional time series models in complex market environments.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex items-start">
+                            <i class="fa fa-check-circle text-green-600 mr-2 mt-0.5"></i>
+                            <div class="text-xs text-gray-700">
+                                <div class="font-semibold text-green-700 mb-1">核心优势 Key Advantages</div>
+                                <div>方向准确率67.62%显著超越Random Walk基准(50%)，MAE $2.79优于基线$2.94。</div>
+                                <div class="text-xs text-gray-500 mt-2 italic">Directional accuracy 67.62% significantly beats Random Walk benchmark (50%), MAE $2.79 better than baseline $2.94.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 风险提示 -->
+            <div class="card p-4 bg-yellow-50 border border-yellow-300 mb-6">
+                <div class="flex items-start">
+                    <i class="fa fa-exclamation-triangle text-yellow-600 mr-3 mt-0.5 text-xl"></i>
+                    <div class="text-sm">
+                        <div class="font-semibold text-yellow-700 mb-1">⚠️ 模型限制说明 Model Limitations</div>
+                        <div class="text-gray-600 space-y-2">
+                            <div>• 单次预测存在不确定性，建议结合多期预测形成趋势判断 <span class="text-gray-400 text-xs">(Single prediction has uncertainty)</span></div>
+                            <div>• 模型基于历史规律，无法预测黑天鹅等极端事件 <span class="text-gray-400 text-xs">(Cannot predict black swan events)</span></div>
+                            <div>• 建议结合人工判断与市场情报进行决策 <span class="text-gray-400 text-xs">(Suggest combining with human judgment & market intelligence)</span></div>
+                        </div>
+                    </div>
+            </div>
+        </section>
+
+        <!-- 客户分析 -->
+        <section id="client" class="section">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900">企业分析 Enterprise Analysis</h2>
+                <div class="text-xs text-gray-400">油价冲击分析 Oil Price Impact Analysis</div>
+            </div>
+            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">以下企业财务基数和敏感度为情景演示假设，不代表实时企业数据或授信结论。</p>
+
+            <!-- 输入区域 -->
+            <div class="card p-4 mb-6">
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-2 block">选择企业 Select Enterprise</label>
+                        <select id="clientSelector" class="input-field w-full" onchange="updateClientAnalysis()">
+                            <option value="petrochina">中国石油 (PetroChina)</option>
+                            <option value="sinopec">中国石化 (Sinopec)</option>
+                            <option value="cnooc">中海油 (CNOOC)</option>
+                            <option value="airchina">中国国航 (Air China)</option>
+                        </select>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm font-medium text-gray-700 mb-2">情景计算口径</div>
+                        <p class="text-xs leading-relaxed text-gray-600">按预设财务基数 × 油价变动幅度 × 企业敏感度估算影响，用于演示分析链路。</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 mb-2 block">油价变动情景 Oil Price Scenario</label>
+                        <div class="text-xs text-gray-500 mb-2">调整油价变动百分比 Adjust Oil Price Change Percentage</div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-3xl font-bold text-gray-800" id="oilChangeDisplay">+5%</span>
+                                <span class="text-sm text-gray-500">Current Change</span>
+                            </div>
+                            <input type="range" id="oilChangeInput" min="-20" max="20" value="5" step="0.5"
+                                class="w-full h-3 bg-blue-100 rounded-lg appearance-none cursor-pointer"
+                                oninput="updateOilChangeDisplay(this.value)">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>-20%</span>
+                                <span>0%</span>
+                                <span>+20%</span>
+                            </div>
+                            <div class="flex justify-center mt-3">
+                                <button onclick="simulateOilChange()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm transition">
+                                    <i class="fa fa-play mr-2"></i>开始模拟 Start Simulation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- 影响链条 -->
+            <div id="impact-chain" class="space-y-4">
+                <!-- 初始状态：请选择企业 -->
+                <div id="initial-state" class="card p-8 text-center">
+                    <i class="fa fa-building text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">请选择企业开始分析</h3>
+                    <p class="text-sm text-gray-500">Select a company to start the analysis</p>
+                    <p class="text-xs text-gray-400 mt-2">Choose an enterprise from the dropdown and adjust oil price scenario</p>
+                </div>
+            </div>
+
+            <!-- 行业案例参考 -->
+            <div class="card p-6 bg-gradient-to-r from-purple-50 to-blue-50">
+                <h3 class="font-semibold mb-4 flex items-center">
+                    <i class="fa fa-book text-purple-600 mr-2"></i>
+                    行业案例参考
+                    <span class="text-xs text-gray-400 ml-2">Industry Case Studies</span>
+                </h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-5 bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer border-2 border-transparent hover:border-purple-300" onclick="showCaseStudy('energy')">
+                        <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
+                            <i class="fa fa-cubes text-green-600 text-lg"></i>
+                        </div>
+                        <h4 class="font-semibold text-green-700 mb-2">能源企业</h4>
+                        <div class="text-xs text-gray-400 mb-1">Energy Companies</div>
+                        <div class="text-sm text-gray-700">
+                            <div class="mb-2">• 油价波动直接影响收入和现金流<br><span class="text-xs text-gray-400">Oil price volatility directly impacts revenue and cash flow</span></div>
+                            <div>• 需建立套期保值机制管理价格风险<br><span class="text-xs text-gray-400">Establish hedging mechanisms to manage price risk</span></div>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer border-2 border-transparent hover:border-orange-300" onclick="showCaseStudy('trader')">
+                        <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-3">
+                            <i class="fa fa-retweet text-orange-600 text-lg"></i>
+                        </div>
+                        <h4 class="font-semibold text-orange-700 mb-2">贸易商</h4>
+                        <div class="text-xs text-gray-400 mb-1">Trading Companies</div>
+                        <div class="text-sm text-gray-700">
+                            <div class="mb-2">• 油价波动影响期货保证金和融资结构<br><span class="text-xs text-gray-400">Oil price volatility affects futures margin and financing structure</span></div>
+                            <div>• 高波动期需关注流动性风险<br><span class="text-xs text-gray-400">Monitor liquidity risk during high volatility periods</span></div>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer border-2 border-transparent hover:border-blue-300" onclick="showCaseStudy('airline')">
+                        <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-3">
+                            <i class="fa fa-plane text-blue-600 text-lg"></i>
+                        </div>
+                        <h4 class="font-semibold text-blue-700 mb-2">航空业</h4>
+                        <div class="text-xs text-gray-400 mb-1">Airlines</div>
+                        <div class="text-sm text-gray-700">
+                            <div class="mb-2">• 燃料成本占比高，油价上行压力大<br><span class="text-xs text-gray-400">High fuel cost ratio, significant pressure from rising oil prices</span></div>
+                            <div>• 需通过票价转嫁或期权对冲管理成本<br><span class="text-xs text-gray-400">Manage costs through fare pass-through or options hedging</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 案例研究弹窗 -->
+        <div id="case-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 id="case-modal-title" class="text-xl font-bold text-gray-900"></h3>
+                        <button onclick="closeCaseModal()" class="text-gray-400 hover:text-gray-600 transition">
+                            <i class="fa fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="case-modal-content" class="text-gray-700"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预警 -->
+        <section id="alert" class="section">
+            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">本页预警内容是历史静态示例，不读取当前市场数据，也不会触发通知。</p>
+            <!-- 关键结论置顶 -->
+            <div class="card p-5 bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 mb-6">
+                <div class="flex items-start">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                        <i class="fa fa-bell text-yellow-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 mb-2">关键结论 Key Conclusions</h3>
+                        <div class="text-sm text-gray-700 space-y-1">
+                            <div><strong>示例状态：</strong>此处为页面预置文案，不构成当前市场判断；请以核实后的市场数据为准。</div>
+                            <div class="text-xs text-gray-500">Current Status: Market in medium volatility period, no extreme risk alerts for short-term (1-7 days).</div>
+                            <div><strong>中期关注：</strong>美元指数突破106可能压制油价-3~-5%，需关注下游客户风险。</div>
+                            <div class="text-xs text-gray-500">Medium-term Focus: USD Index breaking 106 may suppress oil price by -3~-5%, monitor downstream client risks.</div>
+                            <div><strong>长期观察示例：</strong>关注 OPEC+ 供给决策；事件日期请以官方日程为准。</div>
+                            <div class="text-xs text-gray-500">Long-term Observation: June OPEC+ meeting may adjust production cuts, suggest preparing scenario analysis in advance.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-gray-900">极端情况预警 Extreme Risk Alert</h2>
+                <div class="text-xs text-gray-400">短/中/长期预警分类 Short/Medium/Long-term Alert Classification</div>
+            </div>
+
+            <!-- 极端情况强阻断（隐藏，触发时显示） -->
+            <div id="extremeAlertModal" class="hidden mb-6">
+                <div class="card p-6 bg-red-600 text-white border-2 border-red-400">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-4">
+                            <i class="fa fa-exclamation-triangle text-red-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold">⚠️ 极端风险预警</div>
+                            <div class="text-sm opacity-90">Extreme Risk Alert</div>
+                            <div class="text-sm opacity-90">请立即联系风险管理团队</div>
+                            <div class="text-sm opacity-90">Contact Risk Management Team Immediately</div>
+                        </div>
+                    </div>
+                    <div class="bg-white bg-opacity-20 rounded-lg p-4 text-sm mb-4">
+                        <div class="font-semibold mb-2">风险描述 Risk Description</div>
+                        <div>油价单日波动超过10%，市场进入极端波动状态。建议暂停所有新增授信，启动应急预案。</div>
+                        <div class="text-sm opacity-90 mt-2">Oil price fluctuates more than 10% in a single day, market enters extreme volatility. Suggest suspending all new credit extensions and activating emergency plan.</div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="document.getElementById('extremeAlertModal').classList.add('hidden')" class="px-4 py-2 bg-white text-red-600 rounded font-semibold text-sm">
+                            关闭预警 Close Alert
+                        </button>
+                        <button onclick="switchSection(document.querySelector('[data-section=report]'))" class="px-4 py-2 bg-red-700 text-white rounded font-semibold text-sm">
+                            立即生成应急预案 Generate Emergency Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 短期预警 (1-7天) -->
+            <div class="card p-5 mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold">
+                        <span class="w-3 h-3 bg-orange-500 rounded-full mr-2 inline-block"></span>
+                        短期预警 (1-7天) Short-term Alert
+                    </h3>
+                    <span class="tag bg-green-100 text-green-700">正常 Normal</span>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4 text-center text-gray-500">
+                    <i class="fa fa-check-circle text-2xl text-green-500 mb-2"></i>
+                    <p>未检测到极端风险</p>
+                    <p class="text-sm text-gray-500 mt-1">No extreme risks detected</p>
+                </div>
+            </div>
+
+            <!-- 中期预警 (1-4周) -->
+            <div class="card p-5 mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold">
+                        <span class="w-3 h-3 bg-blue-500 rounded-full mr-2 inline-block"></span>
+                        中期预警 (1-4周) Medium-term Alert
+                    </h3>
+                    <span class="tag bg-yellow-100 text-yellow-700">关注 Attention</span>
+                </div>
+                <div class="bg-yellow-50 rounded-xl p-4">
+                    <div class="flex items-start space-x-2">
+                        <i class="fa fa-exclamation-triangle text-yellow-500 mt-1"></i>
+                        <div>
+                            <div class="font-semibold text-sm">美元走强风险</div>
+                            <div class="text-xs text-gray-500">Dollar Strength Risk</div>
+                            <p class="text-xs text-gray-600">美元指数突破106，可能压制油价 -3~5%</p>
+                            <p class="text-xs text-gray-500 mt-1">USD Index breaks above 106, may suppress oil price by -3~5%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 长期预警 (1-3月) -->
+            <div class="card p-5 mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold">
+                        <span class="w-3 h-3 bg-purple-500 rounded-full mr-2 inline-block"></span>
+                        长期预警 (1-3月) Long-term Alert
+                    </h3>
+                    <span class="tag bg-blue-100 text-blue-700">观察 Monitor</span>
+                </div>
+                <div class="bg-blue-50 rounded-xl p-4">
+                    <div class="flex items-start space-x-2">
+                        <i class="fa fa-info-circle text-blue-500 mt-1"></i>
+                        <div>
+                            <div class="font-semibold text-sm">OPEC+产量政策不确定性</div>
+                            <div class="text-xs text-gray-500">OPEC+ Production Policy Uncertainty</div>
+                            <p class="text-xs text-gray-600">关注 OPEC+ 供给决策，事件日期请以官方日程为准</p>
+                            <p class="text-xs text-gray-500 mt-1">Monitor June OPEC+ meeting, potential production cut agreement adjustments</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 无极端风险时的自动引导 -->
+            <div class="card p-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fa fa-check-circle text-green-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-900">当前无极端风险</div>
+                            <div class="text-sm text-gray-600">市场处于正常波动区间</div>
+                            <div class="text-sm text-gray-500 mt-1">Currently No Extreme Risk</div>
+                            <div class="text-sm text-gray-500">Market within normal volatility range</div>
+                        </div>
+                    </div>
+                    <button onclick="switchSection(document.querySelector('[data-section=report]'))" class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
+                        生成完整研报 → Generate Report
+                    </button>
+                </div>
+                <div class="mt-4 text-xs text-gray-500">
+                    <div>💡 建议：虽然当前无极端风险，仍建议生成完整研报供决策参考</div>
+                    <div class="text-gray-500 mt-1">Recommendation: Although no extreme risk currently, still suggest generating full report for decision reference</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 智能报告 - OpenClaw风格 -->
+        <section id="report" class="section">
+            <!-- 关键结论置顶 -->
+            <div class="card p-5 bg-gradient-to-r from-purple-50 to-violet-50 border-l-4 border-purple-500 mb-6">
+                <div class="flex items-start">
+                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                        <i class="fa fa-file-text text-purple-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 mb-2">AI报告生成器 AI Report Generator</h3>
+                        <div class="text-sm text-gray-700 space-y-1">
+                            <div><strong>预设示例：</strong>均衡、风险导向和技术导向三种报告结构，点击后查看静态样例。</div>
+                            <div class="text-xs text-gray-500">Three Modes: Balanced (comprehensive), Risk-Focused (risk control), Technical (indicators).</div>
+                            <div><strong>交互说明：</strong>按钮会在浏览器中载入预置文本，不会请求 AI 或后台服务。</div>
+                            <div class="text-xs text-gray-500">Demo only: Buttons show prepared examples in your browser; no AI or backend request is made.</div>
+                            <div><strong>数据说明：</strong>示例用于展示报告结构，结论和风险等级需结合经核实的数据重新判断。</div>
+                            <div class="text-xs text-gray-500">Examples illustrate report structure and are not live analysis.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-layout">
+                <!-- 左侧菜单 -->
+                <div class="report-sidebar">
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                                <span class="text-sm">🛢️</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-sm text-gray-900">OilClaw 报告示例</h3>
+                                <p class="text-xs text-gray-500">Static report examples</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 报告模式 -->
+                    <div class="p-4 border-b border-gray-200">
+                        <p class="text-xs text-gray-500 mb-2">报告模式 Report Mode</p>
+                        <div class="space-y-2">
+                            <button onclick="generateReport('balanced')" class="w-full text-left px-3 py-2 bg-purple-50 hover:bg-purple-100 rounded-lg text-sm transition border border-purple-200">
+                                <span class="font-semibold text-purple-700">⚖️ 均衡模式</span>
+                                <div class="text-xs text-gray-600 mt-1">全面平衡分析</div>
+                                <div class="text-xs text-gray-500">Comprehensive Balanced Analysis</div>
+                            </button>
+                            <button onclick="generateReport('risk_focused')" class="w-full text-left px-3 py-2 bg-red-50 hover:bg-red-100 rounded-lg text-sm transition border border-red-200">
+                                <span class="font-semibold text-red-700">🛡️ 风险导向</span>
+                                <div class="text-xs text-gray-600 mt-1">侧重风险控制</div>
+                                <div class="text-xs text-gray-500">Risk-Focused Approach</div>
+                            </button>
+                            <button onclick="generateReport('tech_focused')" class="w-full text-left px-3 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm transition border border-blue-200">
+                                <span class="font-semibold text-blue-700">🔬 技术导向</span>
+                                <div class="text-xs text-gray-600 mt-1">侧重技术指标</div>
+                                <div class="text-xs text-gray-500">Technical Indicator Focus</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 快捷功能 -->
+                    <div class="p-4 border-b border-gray-200">
+                        <p class="text-xs text-gray-500 mb-2">快捷功能 Quick Actions</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="quickAsk('预测未来7天油价')" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-xs transition">
+                                <i class="fa fa-line-chart mb-1"></i><br>预测<br>Forecast
+                            </button>
+                            <button onclick="quickAsk('分析主要因子')" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-xs transition">
+                                <i class="fa fa-sitemap mb-1"></i><br>因子<br>Factors
+                            </button>
+                            <button onclick="quickAsk('分析航空业影响')" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-xs transition">
+                                <i class="fa fa-building mb-1"></i><br>客户<br>Clients
+                            </button>
+                            <button onclick="clearChat()" class="p-2 bg-gray-100 hover:bg-gray-200 rounded text-xs transition">
+                                <i class="fa fa-trash mb-1"></i><br>清空<br>Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 最近报告 -->
+                    <div class="p-4 flex-1 overflow-y-auto">
+                        <p class="text-xs text-gray-500 mb-2">最近报告 Recent Reports</p>
+                        <div id="recent-reports" class="space-y-2">
+                            <div class="text-center text-gray-400 text-xs py-4">
+                                <p>还没有生成报告</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 状态信息 -->
+                    <div class="p-4 border-t border-gray-200">
+                        <div class="text-xs text-gray-500">
+                            <div class="flex justify-between mb-1">
+                                <span>Messages</span>
+                                <span id="message-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧AI对话区 -->
+                <div class="report-chat">
+                    <!-- 消息区 -->
+                    <div id="chat-messages" class="chat-messages space-y-4">
+                        <!-- 欢迎消息 -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-lg">🛢️</span>
+                            </div>
+                            <div class="flex-1 bg-white rounded-2xl rounded-tl-none p-4 shadow-sm">
+                                <p class="text-sm text-gray-700">
+                                    欢迎查看 OilClaw 报告示例。本页面不连接 AI 服务。
+                                    <br><br>
+                                    请选择左侧的报告模式，浏览对应的预置样例。
+                                    <div class="text-xs text-gray-500 mt-2">Select a report type to view a prepared example. Nothing is generated live.</div>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 输入区 Input Area -->
+                    <div class="p-4 border-t border-gray-200 bg-white">
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="chat-input" placeholder="输入主题，查看对应报告样例…"
+                                class="flex-1 px-4 py-3 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                onkeypress="if(event.key==='Enter')sendMessage()">
+                            <button onclick="sendMessage()" class="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center text-white hover:opacity-90 transition">
+                                <i class="fa fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-gray-500 mt-2">自定义输入只作为演示记录显示，不会发送到任何 AI 服务。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 合规性说明 -->
+        <section id="compliance" class="section">
+            <div class="card p-8 mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">合规性说明</h2>
+                <p class="text-sm text-gray-400 mb-6">Compliance Statement</p>
+                <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-6">本演示页保留的来源说明来自历史项目材料，未在此逐项核验数据授权和实时接入情况。请勿将其理解为生产系统的数据披露。</p>
+
+                <!-- 数据来源 -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">数据来源</h3>
+                    <p class="text-sm text-gray-400 mb-2">Data Sources</p>
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div class="space-y-3">
+                            <div class="text-gray-600 text-sm">
+                                <div class="font-semibold text-blue-700">Wind金融终端 Wind Financial Terminal</div>
+                                <div class="text-sm text-gray-600 mt-1">所有因子数据均来源于Wind金融终端，覆盖宏观、行业、情绪等多维度数据</div>
+                                <div class="text-xs text-gray-400 mt-1">All factor data sourced from Wind, covering macro, industry, sentiment dimensions</div>
+                            </div>
+                            <div class="text-gray-600 text-sm">
+                                <div class="font-semibold text-green-700">FRED经济数据库 FRED Economic Database</div>
+                                <div class="text-sm text-gray-600 mt-1">美国联邦储备经济数据，用于交叉验证宏观指标</div>
+                                <div class="text-xs text-gray-400 mt-1">US Federal Reserve economic data for macro indicator cross-validation</div>
+                            </div>
+                            <div class="text-gray-600 text-sm">
+                                <div class="font-semibold text-purple-700">Bloomberg数据源 Bloomberg Data</div>
+                                <div class="text-sm text-gray-600 mt-1">补充高频市场数据和OPEC官方发布信息</div>
+                                <div class="text-xs text-gray-400 mt-1">High-frequency market data and OPEC official releases</div>
+                            </div>
+                            <div class="text-gray-600 text-sm">
+                                <div class="font-semibold text-orange-700">公开财务报告 Public Financial Reports</div>
+                                <div class="text-sm text-gray-600 mt-1">上市公司年报、季报用于验证财报数据</div>
+                                <div class="text-xs text-gray-400 mt-1">Listed company annual/quarterly reports for financial data validation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 技术框架 -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">六层技术框架</h3>
+                    <p class="text-sm text-gray-400 mb-2">Six-Layer Technical Framework</p>
+                    <div class="space-y-4">
+                        <div class="flex items-start bg-gradient-to-r from-blue-50 to-white rounded-lg p-4 border-l-4 border-blue-500">
+                            <div>
+                                <div class="font-semibold text-gray-900">DFM 动态因子模型 Dynamic Factor Model</div>
+                                <div class="text-sm text-gray-600">从多变量序列中提取核心因子，捕捉市场深层驱动</div>
+                                <div class="text-xs text-gray-400 mt-1">Extracts core factors from multivariate sequences, capturing deep market drivers</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gradient-to-r from-green-50 to-white rounded-lg p-4 border-l-4 border-green-500">
+                            <div>
+                                <div class="font-semibold text-gray-900">PCMCI 因果发现 Causal Discovery</div>
+                                <div class="text-sm text-gray-600">识别因子间的因果路径和滞后效应，过滤虚假相关性</div>
+                                <div class="text-xs text-gray-400 mt-1">Identifies causal paths and lag effects between factors, filters spurious correlations</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gradient-to-r from-purple-50 to-white rounded-lg p-4 border-l-4 border-purple-500">
+                            <div>
+                                <div class="font-semibold text-gray-900">HMM 隐马尔可夫链状态检测 Hidden Markov Model</div>
+                                <div class="text-sm text-gray-600">识别低/中/高波动市场状态，实现动态风控切换</div>
+                                <div class="text-xs text-gray-400 mt-1">Identifies low/medium/high volatility market regimes for dynamic risk control switching</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gradient-to-r from-orange-50 to-white rounded-lg p-4 border-l-4 border-orange-500">
+                            <div>
+                                <div class="font-semibold text-gray-900">Mamba-MoE 核心预测 Core Prediction</div>
+                                <div class="text-sm text-gray-600">专家混合架构，给每个专家最合适的权重进行预测</div>
+                                <div class="text-xs text-gray-400 mt-1">Mixture of Experts architecture, assigns optimal weights to each expert for prediction</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gradient-to-r from-pink-50 to-white rounded-lg p-4 border-l-4 border-pink-500">
+                            <div>
+                                <div class="font-semibold text-gray-900">SHAP 因子归因 Factor Attribution</div>
+                                <div class="text-sm text-gray-600">解释模型决策，生成可追溯的归因报告</div>
+                                <div class="text-xs text-gray-400 mt-1">Explains model decisions, generates traceable attribution reports</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-gradient-to-r from-indigo-50 to-white rounded-lg p-4 border-l-4 border-indigo-500">
+                            <div>
+                                <div class="font-semibold text-gray-900">基于状态的风控策略 Regime-Based Risk Control</div>
+                                <div class="text-sm text-gray-600">根据市场波动状态动态调整对冲策略，降低风险敞口</div>
+                                <div class="text-xs text-gray-400 mt-1">Dynamically adjusts hedging strategy based on market volatility regime to reduce exposure</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 免责声明 -->
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-amber-800 mb-2">免责声明</h4>
+                    <p class="text-sm text-amber-400 mb-1">Disclaimer</p>
+                    <p class="text-sm text-amber-700">本系统提供的信息仅供参考，不构成投资建议。用户应基于自身独立判断做出决策。</p>
+                    <p class="text-xs text-amber-600 mt-1">The information provided by this system is for reference only and does not constitute investment advice. Users should make decisions based on their own independent judgment.</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- 团队信息页脚 -->
+    <footer class="border-t border-gray-200 mt-8 py-6 bg-gray-50">
+        <div class="container mx-auto px-4 text-center space-y-2">
+            <p class="text-sm text-gray-600">
+                OilClaw<span class="text-[20px] text-gray-400 ml-0.5 align-[0.2em]">®</span> 产品由来自西交利物浦大学的团队创作
+            </p>
+            <p class="text-xs text-gray-400">
+                OilClaw<span class="text-[20px] text-gray-300 ml-0.5 align-[0.2em]">®</span> Technology is created by a team from Xi'an Jiaotong-Liverpool University
+            </p>
+            <p class="text-xs text-gray-500">团队名称：赫尔墨斯的箴言 / Team Name: Hermes' Proverb</p>
+        </div>
+    </footer>
+
+    <script>
+        let messageCount = 0;
+        let overviewDetailsVisible = false;
+
+        // 页面加载时初始化滑块
+        window.addEventListener('DOMContentLoaded', () => {
+            updateOilChangeDisplay(document.getElementById('oilChangeInput').value);
+            updateClientAnalysis();
+        });
+
+        // 切换首页详情展开/收起
+        function toggleOverviewDetails() {
+            const detailsDiv = document.getElementById('overviewDetails');
+            const toggleBtn = document.getElementById('toggleDetailsBtn');
+            const toggleIcon = document.getElementById('toggleIcon');
+            const toggleText = document.getElementById('toggleText');
+
+            overviewDetailsVisible = !overviewDetailsVisible;
+
+            if (overviewDetailsVisible) {
+                // 展开
+                detailsDiv.classList.remove('hidden');
+                toggleIcon.classList.remove('fa-chevron-down');
+                toggleIcon.classList.add('fa-chevron-up');
+                toggleText.textContent = '收起模型指标 · Hide Model Metrics';
+                showToast('已展开模型指标');
+            } else {
+                // 收起
+                detailsDiv.classList.add('hidden');
+                toggleIcon.classList.remove('fa-chevron-up');
+                toggleIcon.classList.add('fa-chevron-down');
+                toggleText.textContent = '查看模型指标 · View Model Metrics';
+            }
+        }
+
+        // 页面切换
+        function switchSection(el) {
+            const section = el.getAttribute('data-section');
+            
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            
+            const targetSection = document.getElementById(section);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                targetSection.style.display = 'block';
+            }
+            
+            document.querySelectorAll('.nav-item').forEach(n => {
+                n.classList.toggle('active', n.getAttribute('data-section') === section);
+            });
+            document.getElementById('mobileNav').classList.add('hidden');
+            document.querySelector('[aria-label="打开导航"]').setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleMobileNav() {
+            const menu = document.getElementById('mobileNav');
+            const isOpen = menu.classList.toggle('hidden') === false;
+            document.querySelector('[aria-label="打开导航"]').setAttribute('aria-expanded', String(isOpen));
+        }
+
+        // 静态报告样例：不调用模型或后台服务
+        const demoResponses = {
+            balanced: '示例结论：报告应先说明数据时间与市场状态，再结合经核实的影响因子分析油价可能面临的压力。客户影响由财务数据和油价敏感度估算，建议由业务人员复核后再用于授信或对冲决策。',
+            risk_focused: '示例结论：可从价格冲击幅度、客户行业敏感度和现金流缓冲三个维度检查风险。页面展示的情景数字仅为演示假设，不能直接作为风险评级或操作建议。',
+            tech_focused: '示例说明：模型表现需要结合测试区间、样本量、基准方法和无前视的数据切分来解释。此页面展示的历史图表只演示信息布局，不构成未来预测。'
+        };
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const msgs = document.getElementById('chat-messages');
+            const mode = window.demoReportMode || 'balanced';
+            const text = demoResponses[mode] || demoResponses.balanced;
+            const summary = generateReportSummary(text);
+
+            msgs.insertAdjacentHTML('beforeend', `
+                <div class="flex items-start space-x-3 justify-end mb-4">
+                    <div class="bg-purple-600 text-white rounded-2xl rounded-tr-none p-4 shadow-sm max-w-2xl">
+                        <p class="text-sm">${escapeHtml(msg)}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-lg">👤</span>
+                    </div>
+                </div>
+            `);
+
+            input.value = '';
+            msgs.insertAdjacentHTML('beforeend', `
+                    <div class="flex items-start space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-lg">🛢️</span>
+                        </div>
+                        <div class="flex-1 bg-white rounded-2xl rounded-tl-none shadow-sm overflow-hidden">
+                            <div class="bg-gradient-to-r from-purple-50 to-blue-50 p-4 border-b border-gray-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fa fa-file-text text-purple-600 mr-2"></i>
+                                    <span class="font-semibold text-gray-900">预置报告样例 · 非实时生成</span>
+                                </div>
+                                <div class="text-sm text-gray-700 space-y-1">
+                                    <div><strong>主题：</strong>${escapeHtml(summary.topic)}</div>
+                                    <div><strong>示例：</strong>${escapeHtml(summary.conclusion)}</div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <p class="text-sm leading-relaxed">${escapeHtml(text)}</p>
+                                <p class="text-xs text-amber-700 mt-3">此内容仅用于展示报告结构，不代表当前市场分析或投资建议。</p>
+                            </div>
+                            ${summary.showChart ? `
+                            <div class="p-4 bg-gray-50 border-t border-gray-200">
+                                <div class="text-xs text-gray-500 mb-2">历史项目图表（演示素材）</div>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <div class="text-xs text-gray-500 mb-1">训练过程</div>
+                                        <div class="chart-container">
+                                            <img src="output/L4_training.png" alt="样本内拟合">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-500 mb-1">历史测试结果</div>
+                                        <div class="chart-container">
+                                            <img src="output/L4_prediction.png" alt="历史测试结果">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+            `);
+
+            messageCount += 2;
+            document.getElementById('message-count').textContent = messageCount;
+            addRecentReport(msg, text, summary);
+            window.demoReportMode = 'balanced';
+
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        // 生成报告摘要
+        function generateReportSummary(text) {
+            const lowerText = text.toLowerCase();
+
+            // 判断是否是预测相关报告
+            const isPrediction = lowerText.includes('预测') || lowerText.includes('prediction') ||
+                               lowerText.includes('forecast') || lowerText.includes('未来');
+
+            // 判断是否是风险相关报告
+            const isRisk = lowerText.includes('风险') || lowerText.includes('risk') ||
+                         lowerText.includes('回撤') || lowerText.includes('波动');
+
+            // 判断是否是客户相关报告
+            const isClient = lowerText.includes('客户') || lowerText.includes('企业') ||
+                          lowerText.includes('client') || lowerText.includes('company');
+
+            // 提取主题
+            let topic = '综合分析';
+            if (isPrediction) topic = '油价预测';
+            else if (isRisk) topic = '风险评估';
+            else if (isClient) topic = '客户分析';
+
+            // 提取关键结论（取文本前50字）
+            const conclusion = text.substring(0, 80) + '...';
+
+            // 判断风险等级
+            let riskLevel = '中等';
+            let riskClass = 'bg-yellow-100 text-yellow-700';
+
+            const riskKeywords = {
+                high: ['高风险', '极大', '严重', 'danger', 'high risk', 'extreme'],
+                low: ['低风险', '安全', '良好', 'low risk', 'safe', 'good']
+            };
+
+            for (const keyword of riskKeywords.high) {
+                if (lowerText.includes(keyword.toLowerCase())) {
+                    riskLevel = '高风险';
+                    riskClass = 'bg-red-100 text-red-700';
+                    break;
+                }
+            }
+
+            if (riskLevel === '中等') {
+                for (const keyword of riskKeywords.low) {
+                    if (lowerText.includes(keyword.toLowerCase())) {
+                        riskLevel = '低风险';
+                        riskClass = 'bg-green-100 text-green-700';
+                        break;
+                    }
+                }
+            }
+
+            return {
+                topic,
+                conclusion,
+                riskLevel,
+                riskClass,
+                showChart: isPrediction
+            };
+        }
+        
+        // 生成预设报告
+        function generateReport(mode) {
+            const prompts = {
+                balanced: '查看均衡模式报告样例',
+                risk_focused: '查看风险导向报告样例',
+                tech_focused: '查看技术导向报告样例'
+            };
+            window.demoReportMode = mode;
+            document.getElementById('chat-input').value = prompts[mode] || prompts.balanced;
+            sendMessage();
+        }
+        
+        // 快捷提问
+        function quickAsk(question) {
+            window.demoReportMode = question.includes('因子') ? 'tech_focused' : question.includes('客户') ? 'risk_focused' : 'balanced';
+            document.getElementById('chat-input').value = question;
+            sendMessage();
+        }
+        
+        // 清空聊天
+        function clearChat() {
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-lg">🛢️</span>
+                    </div>
+                    <div class="flex-1 bg-white rounded-2xl rounded-tl-none p-4 shadow-sm">
+                            <p class="text-sm text-gray-700">已清空。请选择报告模式，查看预置样例。</p>
+                    </div>
+                </div>
+            `;
+            messageCount = 0;
+            document.getElementById('message-count').textContent = '0';
+        }
+        
+        // 添加到最近报告列表
+        function addRecentReport(question, answer, summary) {
+            const container = document.getElementById('recent-reports');
+            const timestamp = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+            if (container.querySelector('.text-gray-400')) {
+                container.innerHTML = '';
+            }
+
+            const reportHtml = `
+                <div class="p-3 bg-white rounded-lg border border-gray-200 hover:border-purple-300 transition cursor-pointer text-xs shadow-sm" onclick="this.querySelector('.report-full').classList.toggle('hidden')">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-gray-400">${escapeHtml(timestamp)}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs">样例</span>
+                    </div>
+                    <div class="font-semibold text-gray-800 mb-1">${escapeHtml(summary.topic)}</div>
+                    <div class="text-gray-600 mb-2">${escapeHtml(summary.conclusion)}</div>
+                    <div class="report-full hidden mt-2 pt-2 border-t border-gray-200 text-gray-700">
+                        ${escapeHtml(answer.substring(0, 150))}...
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('afterbegin', reportHtml);
+
+            const reports = container.querySelectorAll('.p-3');
+            if (reports.length > 5) {
+                reports[reports.length - 1].remove();
+            }
+        }
+        
+        // 更新时间
+        function updateTime() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString('zh-CN', { 
+                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' 
+            });
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // ========== 时间切换功能 ==========
+        
+        // 当前状态
+        let currentHorizon = 7;
+        let currentChartOffset = 0;
+        
+        // 预测页时间切换
+        function switchPredictionHorizon(days, btn) {
+            currentHorizon = days;
+            // 更新按钮样式
+            document.querySelectorAll('.horizon-btn').forEach(b => {
+                b.classList.remove('bg-purple-100', 'text-purple-700', 'font-medium');
+                b.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            btn.classList.remove('bg-gray-100', 'text-gray-600');
+            btn.classList.add('bg-purple-100', 'text-purple-700', 'font-medium');
+
+            // TODO: 调用API获取对应时间段的预测数据
+            console.log(`切换到 ${days} 天预测`);
+
+            // 显示提示
+            showToast(`已切换到 ${days === 7 ? '1周' : days === 30 ? '1月' : '1季'} 预测视图`);
+        }
+
+        // 统计指标展开/收起
+        function toggleMetrics(metricsId) {
+            const element = document.getElementById(metricsId);
+            const icon = document.getElementById(metricsId + '-icon');
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                element.classList.add('hidden');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // 预测Tab切换
+        function switchPredictionTab(tab, btn) {
+            // 隐藏所有内容
+            document.querySelectorAll('.prediction-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // 重置所有Tab样式
+            document.querySelectorAll('.prediction-tab').forEach(tabBtn => {
+                tabBtn.classList.remove('border-blue-500', 'border-green-500', 'bg-blue-50', 'bg-green-50', 'text-blue-600', 'text-green-600');
+                tabBtn.classList.add('text-gray-500', 'border-b-2', 'border-transparent');
+            });
+
+            // 显示选中的内容
+            document.getElementById('content-' + tab).classList.remove('hidden');
+
+            // 设置选中Tab样式
+            btn.classList.remove('text-gray-500', 'border-transparent');
+            if (tab === 'insample') {
+                btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-600');
+            } else {
+                btn.classList.add('border-green-500', 'bg-green-50', 'text-green-600');
+            }
+        }
+
+        // 图片放大模态框
+        function openImageModal(src, title) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.id = 'image-modal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+
+            const content = document.createElement('div');
+            content.className = 'bg-white rounded-lg p-4 max-w-5xl max-h-[90vh] overflow-auto';
+            content.onclick = function(e) {
+                e.stopPropagation();
+            };
+
+            const header = document.createElement('div');
+            header.className = 'flex justify-between items-center mb-4';
+            header.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-900">${title}</h3>
+                <button onclick="document.getElementById('image-modal').remove()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            `;
+
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = 'w-full h-auto max-h-[75vh] object-contain';
+
+            content.appendChild(header);
+            content.appendChild(img);
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // ESC键关闭
+            const closeOnEsc = function(e) {
+                if (e.key === 'Escape') {
+                    const m = document.getElementById('image-modal');
+                    if (m) {
+                        m.remove();
+                        document.removeEventListener('keydown', closeOnEsc);
+                    }
+                }
+            };
+            document.addEventListener('keydown', closeOnEsc);
+        }
+
+        // 因子详情展开/收起
+        function toggleFactorDetail(factorId) {
+            const element = document.getElementById(factorId);
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+            } else {
+                element.classList.add('hidden');
+            }
+        }
+
+        // 图表说明展开/收起
+        function toggleChartExplanation(explanationId) {
+            const element = document.getElementById(explanationId);
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+            } else {
+                element.classList.add('hidden');
+            }
+        }
+        
+        // 图表步进 - 带完整视觉反馈
+        function stepChart(direction) {
+            const oldOffset = currentChartOffset;
+            currentChartOffset += direction * 10;
+            if (currentChartOffset < 0) currentChartOffset = 0;
+            if (currentChartOffset > 50) currentChartOffset = 50;
+            
+            // 更新显示文本
+            const infoEl = document.getElementById('chart-range-info');
+            if (infoEl) {
+                infoEl.textContent = 
+                    `显示第 ${currentChartOffset + 1}-${currentChartOffset + 55} 周 · 点击左右箭头步进`;
+                
+                // 添加高亮效果
+                infoEl.style.color = '#667eea';
+                infoEl.style.fontWeight = 'bold';
+                infoEl.style.transition = 'all 0.3s ease';
+                infoEl.style.backgroundColor = '#f0f4ff';
+                
+                setTimeout(() => {
+                    infoEl.style.color = '';
+                    infoEl.style.fontWeight = '';
+                    infoEl.style.backgroundColor = '';
+                }, 800);
+            }
+            
+            // 添加视觉动画效果到预测图容器
+            const chartContainer = document.querySelector('.chart-container');
+            if (chartContainer) {
+                chartContainer.style.transform = direction > 0 ? 'translateX(-5px)' : 'translateX(5px)';
+                chartContainer.style.transition = 'transform 0.2s ease';
+                setTimeout(() => {
+                    chartContainer.style.transform = '';
+                }, 200);
+            }
+            
+            // 添加Toast提示
+            const directionText = direction > 1 ? '向前' : '向后';
+            showToast(`📊 图表范围已${directionText}移动 10 周\n显示: 第 ${currentChartOffset + 1}-${currentChartOffset + 55} 周 (共105周)`);
+            
+            console.log(`图表偏移: ${currentChartOffset}`);
+        }
+        
+        // 更新油价变动显示
+        function updateOilChangeDisplay(value) {
+            const display = document.getElementById('oilChangeDisplay');
+            const numValue = parseFloat(value);
+            const sign = numValue > 0 ? '+' : numValue < 0 ? '-' : '';
+            display.textContent = `${sign}${Math.abs(numValue).toFixed(1)}%`;
+
+            // 更新滑块颜色
+            const slider = document.getElementById('oilChangeInput');
+            if (numValue > 0) {
+                slider.classList.remove('bg-red-100', 'bg-gray-100');
+                slider.classList.add('bg-green-100');
+            } else if (numValue < 0) {
+                slider.classList.remove('bg-green-100', 'bg-gray-100');
+                slider.classList.add('bg-red-100');
+            } else {
+                slider.classList.remove('bg-green-100', 'bg-red-100');
+                slider.classList.add('bg-gray-100');
+            }
+        }
+
+        // 更新客户分析逻辑链条
+        function updateClientAnalysis() {
+            const clientId = document.getElementById('clientSelector').value;
+            const parsedChange = Number(document.getElementById('oilChangeInput').value);
+            const changePercent = Number.isFinite(parsedChange) ? parsedChange : 5;
+
+            // 客户数据配置
+            const clientData = {
+                petrochina: {
+                    name: '中国石油',
+                    industry: '上游',
+                    industryEn: 'Upstream',
+                    baseRevenue: 3000000000000, // 3000亿
+                    baseProfit: 1070000000000, // 1070亿
+                    sensitivity: 0.4, // 营收/净利润敏感度
+                    riskLevel: 'beneficiary',
+                    direction: 'up' // 受益
+                },
+                sinopec: {
+                    name: '中国石化',
+                    industry: '中游',
+                    industryEn: 'Midstream',
+                    baseRevenue: 3272000000000, // 3272亿
+                    baseProfit: 562000000000, // 562亿
+                    sensitivity: -0.15,
+                    riskLevel: 'pressure',
+                    direction: 'down' // 承压
+                },
+                cnooc: {
+                    name: '中海油',
+                    industry: '上游',
+                    industryEn: 'Upstream',
+                    baseRevenue: 3191000000000, // 3191亿
+                    baseProfit: 1348000000000, // 1348亿
+                    sensitivity: 0.5,
+                    riskLevel: 'beneficiary',
+                    direction: 'up' // 受益
+                },
+                airchina: {
+                    name: '中国国航',
+                    industry: '下游',
+                    industryEn: 'Downstream',
+                    baseRevenue: 1283000000000, // 1283亿
+                    baseProfit: 3900000000, // 39亿
+                    sensitivity: -0.8,
+                    riskLevel: 'risk',
+                    direction: 'down' // 受损
+                }
+            };
+
+            const client = clientData[clientId];
+            const revenueChange = client.baseRevenue * (changePercent / 100) * client.sensitivity;
+            const profitChange = client.baseProfit * (changePercent / 100) * client.sensitivity;
+
+            // 生成逻辑链条HTML
+            const chainHTML = generateImpactChain(client, changePercent, revenueChange, profitChange);
+            document.getElementById('impact-chain').innerHTML = chainHTML;
+        }
+
+        // 生成影响链条HTML - 完整闭环逻辑
+        function generateImpactChain(client, changePercent, revenueChange, profitChange) {
+            const isPositive = changePercent > 0;
+            const direction = client.direction === 'up' ? '受益' : '承压';
+            const impactSign = client.direction === 'up' ? '+' : '';
+            const colorClass = client.industry === '上游' ? 'green' : client.industry === '中游' ? 'yellow' : 'red';
+
+            // 根据行业和涨跌方向选择不同的叙事逻辑
+            let industryImpact = '';
+            let riskLevel = '';
+            let hedgeSuggestion = '';
+
+            if (client.industry === '上游') {
+                industryImpact = isPositive
+                    ? '油价上涨，勘探收益提升，现金流充裕，扩产意愿增强。上游企业进入良性循环。<br><span class="text-xs text-gray-400">Oil price rise boosts exploration returns, cash flow adequate, expansion intent increases. Upstream enterprises enter a virtuous cycle.</span>'
+                    : '油价下跌，勘探收益下降，现金流紧张，扩产意愿降低。需关注债务压力。<br><span class="text-xs text-gray-400">Oil price fall reduces exploration returns, cash flow tightens, expansion intent decreases. Monitor debt pressure.</span>';
+                riskLevel = isPositive ? '现金流充裕，风险较低 Cash Flow Healthy, Low Risk' : '现金流承压，债务压力增加 Debt Pressure Rising';
+                hedgeSuggestion = '建议增加看跌期权对冲下行风险，保护现有勘探收益。<br><span class="text-xs text-gray-400">Add put options to hedge downside risk, protect existing exploration returns.</span>';
+            } else if (client.industry === '中游') {
+                industryImpact = isPositive
+                    ? '油价上涨，原料成本上升，产品调价滞后，利润率承压。现金流周转放缓。<br><span class="text-xs text-gray-400">Oil price rise increases raw material costs, price adjustment lags, profit margins under pressure. Cash flow turnover slows.</span>'
+                    : '油价下跌，原料成本下降，产品价格有下降空间，利润率改善。现金流状况改善。<br><span class="text-xs text-gray-400">Oil price fall reduces raw material costs, room for price cuts, profit margins improve. Cash flow improves.</span>';
+                riskLevel = isPositive ? '利润率承压，现金流压力 Profit Margin Pressure' : '经营状况改善，现金流良好 Improved Operations';
+                hedgeSuggestion = '建议根据库存周期灵活调整对冲比例，关注油价反弹风险。<br><span class="text-xs text-gray-400">Adjust hedging ratio flexibly based on inventory cycle, monitor oil price rebound risk.</span>';
+            } else if (client.industry === '下游') {
+                industryImpact = isPositive
+                    ? '油价上涨，燃料成本上升，运营成本增加，利润空间被压缩。航空业盈利压力显著。<br><span class="text-xs text-gray-400">Oil price rise increases fuel costs, operating costs rise, profit margins compressed. Airlines face significant profit pressure.</span>'
+                    : '油价下跌，燃料成本下降，运营成本减少，利润空间释放，盈利能力恢复。<br><span class="text-xs text-gray-400">Oil price fall reduces fuel costs, operating costs decrease, profit margins expand, profitability recovers.</span>';
+                riskLevel = isPositive ? '盈利压力显著，需高度对冲 High Hedging Pressure Needed' : '经营压力缓解，利润空间释放 Profit Relief';
+                hedgeSuggestion = '建议购买看跌期权对冲油价上涨风险，或考虑提高票价转嫁成本。<br><span class="text-xs text-gray-400">Purchase put options to hedge oil price rise risk, or consider raising fares to pass on costs.</span>';
+            }
+
+            return `
+                <!-- 企业概览 -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="text-lg font-semibold text-gray-800">
+                        <i class="fa fa-${client.industryEn.toLowerCase()} text-${colorClass}-600 mr-2"></i>
+                        ${client.name} <span class="text-xs text-gray-400 ml-2">· ${client.industry} ${client.industryEn}</span>
+                    </div>
+                    <div class="px-4 py-2 rounded-full text-sm font-medium ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                        ${isPositive ? '油价上涨受益' : '油价上涨受损'}
+                        <span class="text-xs text-gray-400 ml-1">${isPositive ? 'Oil Price Rise Beneficiary' : 'Oil Price Rise Affected'}</span>
+                    </div>
+                </div>
+
+                <!-- 步骤1：产业影响分析 -->
+                <div class="mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-${colorClass}-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-sm font-bold text-${colorClass}-600">1</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800">产业影响分析 Industry Impact Analysis</h4>
+                        <span class="text-xs text-gray-400 ml-2">分析油价波动对行业的传导机制</span>
+                    </div>
+                    <div class="card p-4 bg-${colorClass}-50 border-l-4 border-${colorClass}-400">
+                        <div class="flex items-start mb-3">
+                            <i class="fa fa-link text-${colorClass}-500 mr-2 mt-1"></i>
+                            <span class="text-gray-700 font-semibold">影响路径：</span>
+                            <span class="text-gray-600">原油价格${changePercent > 0 ? '上涨' : '下跌'}${Math.abs(changePercent)}%</span>
+                            → ${client.industry}行业
+                            → ${client.name}企业
+                        </span>
+                        </div>
+                        <div class="text-sm text-gray-700 mt-3">
+                            <span class="text-gray-500 italic">Oil price ${isPositive ? 'rises' : 'falls'} by ${Math.abs(changePercent)}% → ${client.industryEn} sector → ${client.name} enterprise</span>
+                        </div>
+                        <div class="bg-white rounded p-3 mt-3">
+                            <p class="text-gray-700 mb-1"><strong>影响分析 Impact Analysis：</strong></p>
+                            <p class="text-sm text-gray-600">${industryImpact}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤2：财务影响评估 -->
+                <div class="mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-sm font-bold text-blue-600">2</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800">财务影响评估 Financial Impact Assessment</h4>
+                        <span class="text-xs text-gray-400 ml-2">量化油价变动对企业财务指标的具体影响</span>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="card p-4">
+                            <div class="text-xs text-gray-500 mb-1">营收变动 Revenue Change</div>
+                            <div class="text-2xl font-bold ${revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${revenueChange >= 0 ? '+' : ''}${(revenueChange / 100000000).toFixed(1)}亿
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">Revenue Change (¥100M)</div>
+                        </div>
+                        <div class="card p-4">
+                            <div class="text-xs text-gray-500 mb-1">净利润变动 Net Profit Change</div>
+                            <div class="text-2xl font-bold ${profitChange >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${profitChange >= 0 ? '+' : ''}${(profitChange / 100000000).toFixed(1)}亿
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">Net Profit Change (¥100M)</div>
+                        </div>
+                    </div>
+                    <div class="card p-4 bg-gray-50 rounded-lg">
+                        <div class="text-xs text-gray-500 mb-2">风险评估 Risk Assessment</div>
+                        <div class="text-sm text-gray-700 font-semibold mb-1">${riskLevel}</div>
+                        <div class="text-xs text-gray-500">基于现金流、债务结构和盈利能力<br><span class="text-xs text-gray-400">Based on cash flow, debt structure and profitability</span></div>
+                    </div>
+                </div>
+
+                <!-- 步骤3：风控建议 -->
+                <div class="mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-sm font-bold text-purple-600">3</span>
+                        </div>
+                        <h4 class="font-semibold text-gray-800">风控建议 Risk Control Recommendations</h4>
+                        <span class="text-xs text-gray-400 ml-2">基于市场预期和财务状况提出应对策略</span>
+                    </div>
+                    <div class="card p-4 bg-purple-50 border-l-4 border-purple-400">
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <i class="fa fa-shield-alt text-purple-500 mr-2 mt-1"></i>
+                                <span><strong>对冲策略 Hedging Strategy：</strong></span>
+                                <div class="text-gray-600 mt-1">${hedgeSuggestion}</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span><strong>授信管理 Credit Management：</strong></span>
+                                <div class="text-gray-600 mt-1">${client.industry === '上游' ? '维持现有授信额度，关注现金流充裕度。建议考虑提供专项贸易融资支持勘探业务。<br><span class="text-xs text-gray-400">Maintain existing credit limits, monitor cash flow adequacy. Consider providing special trade financing to support exploration activities.</span>' : client.industry === '中游' ? '建议适度收紧授信，监控库存和应收账款。关注资金周转效率。<br><span class="text-xs text-gray-400">Moderately tighten credit limits, monitor inventory and accounts receivable. Focus on fund turnover efficiency.</span>' : '建议维持现有授信，但需监控现金流状况。可考虑提供临时授信应对成本压力。<br><span class="text-xs text-gray-400">Maintain existing credit but monitor cash flow status. Consider providing temporary credit to handle cost pressure.</span>'}</div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-chart-line text-green-500 mr-2 mt-1"></i>
+                                <span><strong>评级跟踪 Rating Monitoring：</strong></span>
+                                <div class="text-gray-600 mt-1">${client.industry === '上游' ? '维持当前信用评级，季度复核勘探投资回报。<br><span class="text-xs text-gray-400">Maintain current credit rating, quarterly review of exploration investment returns.</span>' : client.industry === '中游' ? '建议关注毛利率和经营现金流变化，必要时进行评级展望调整。<br><span class="text-xs text-gray-400">Monitor gross margin and operating cash flow changes, adjust rating outlook when necessary.</span>' : '建议关注经营现金流恢复情况，维持现有评级。季度复盘盈利恢复进度。<br><span class="text-xs text-gray-400">Monitor operating cash flow recovery, maintain existing rating. Quarterly review of profit recovery progress.</span>'}</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示案例研究
+        function showCaseStudy(caseType) {
+            const caseModal = document.getElementById('case-modal');
+            const caseTitle = document.getElementById('case-modal-title');
+            const caseContent = document.getElementById('case-modal-content');
+
+            const cases = {
+                energy: {
+                    title: '能源企业影响案例 Energy Company Impact Case',
+                    content: `
+                        <h4 class="font-semibold text-gray-800 mb-3">案例背景 Case Background</h4>
+                        <p class="text-sm text-gray-700 mb-2">某上游能源企业A公司，主营原油开采和天然气业务。</p>
+                        <div class="text-xs text-gray-400 italic">Energy Company A engaged in oil and gas exploration and production.</p>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">情景描述 Scenario Description</h4>
+                        <p class="text-sm text-gray-700 mb-2">国际油价在3个月内从$70/桶飙升至$90/桶，涨幅约28.6%。</p>
+                        <div class="text-xs text-gray-400 italic">International oil prices surged from $70 to $90 per barrel in 3 months, up ~28.6%.</p>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">影响分析 Impact Analysis</h4>
+                        <div class="space-y-2 text-sm text-gray-700">
+                            <div><strong>直接收入影响 Revenue Impact：</strong>油价每上涨$1，A公司年营收增加约¥5亿。28%涨幅对应¥140亿营收增长。<br><span class="text-xs text-gray-400">A Company revenue increases by ¥5B per $1 oil price rise. 28% increase corresponds to ¥14B revenue growth.</span></div>
+                            <div><strong>现金流改善 Cash Flow Improvement：</strong>原油销售现金流入大幅增加，经营性现金流从¥80亿增至¥110亿。<br><span class="text-xs text-gray-400">Crude oil sales cash inflow increased significantly, operating cash flow rose from ¥8B to ¥11B.</span></div>
+                            <div><strong>投资意愿 Investment Intention：</strong>现金流充裕后，A公司启动了一个新的勘探项目，预计投资额¥50亿。<br><span class="text-xs text-gray-400">With ample cash flow, Company A launched a new exploration project with estimated investment of ¥5B.</span></div>
+                            <div class="text-xs text-gray-400 italic">Direct revenue impact: +¥5B per $1 increase. Cash flow from operations improved from ¥80B to ¥110B. Investment intention increased with ¥50B new project.</div>
+                        </div>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">应对措施 Response Actions</h4>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li><strong>风险管理 Risk Management：</strong>建立油价风险预警机制，设置油价回撤风险对冲比例。<br><span class="text-xs text-gray-400">Establish oil price risk early warning mechanism, set hedging ratio for price pullback risk.</span></li>
+                            <li><strong>资金利用 Fund Utilization：</strong>将超额现金用于偿还高成本债务，降低财务费用。<br><span class="text-xs text-gray-400">Use excess cash to repay high-cost debt, reduce financial expenses.</span></li>
+                            <li><strong>投资节奏 Investment Pace：</strong>审慎评估新项目，分阶段投入，避免过度扩张。<br><span class="text-xs text-gray-400">Prudently evaluate new projects, invest in phases to avoid over-expansion.</span></li>
+                        </ul>
+                    `
+                },
+                trader: {
+                    title: '贸易商风险案例 Trader Risk Case',
+                    content: `
+                        <h4 class="font-semibold text-gray-800 mb-3">案例背景 Case Background</h4>
+                        <p class="text-sm text-gray-700 mb-2">B贸易公司T，主营原油期货和现货贸易，为下游企业提供燃料供应。</p>
+                        <div class="text-xs text-gray-400 italic">Trading company T, engaged in crude oil futures and spot trading, providing fuel supply to downstream enterprises.</p>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">情景描述 Scenario Description</h4>
+                        <p class="text-sm text-gray-700 mb-2">市场波动加剧，油价在2周内从$75震荡至$95，单日振幅超过8%。</p>
+                        <div class="text-xs text-gray-400 italic">Market volatility intensified. Oil prices swung between $75 and $95 in 2 weeks, daily volatility exceeded 8%.</p>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">风险触发 Risk Trigger</h4>
+                        <div class="space-y-2 text-sm text-gray-700">
+                            <div><strong>保证金压力 Margin Pressure：</strong>油价高波动导致期货保证金要求大幅增加，从¥100万激增至¥300万。<br><span class="text-xs text-gray-400">High oil price volatility caused futures margin requirements to surge from ¥1M to ¥3M.</span></div>
+                            <div><strong>流动性紧张 Liquidity Tightness：</strong>可用保证金余额骤降，新增贸易仓位受限。<br><span class="text-xs text-gray-400">Available margin balance dropped sharply, new trading positions limited.</span></div>
+                            <div><strong>融资结构 Financing Structure：</strong>银行收紧了贸易融资授信，要求提高抵押品质量。<br><span class="text-xs text-gray-400">Banks tightened trade financing credit, requiring higher collateral quality.</span></div>
+                            <div class="text-xs text-gray-400 italic">Margin requirement surged from ¥1M to ¥3M. Available margin balance dropped sharply. Trade financing credit tightened by banks requiring higher collateral quality.</div>
+                        </div>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">应对措施 Response Actions</h4>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li><strong>仓位控制 Position Control：</strong>严格执行单笔交易风险限额，避免集中持仓。<br><span class="text-xs text-gray-400">Strictly enforce risk limits for single trades, avoid concentrated positions.</span></li>
+                            <li><strong>保证金管理 Margin Management：</strong>建立动态保证金计算模型，实时监控保证金占用率。<br><span class="text-xs text-gray-400">Establish dynamic margin calculation model, monitor margin utilization in real time.</span></li>
+                            <li><strong>融资备选 Financing Alternatives：</strong>提前与多家银行建立授信关系，避免融资渠道单一。<br><span class="text-xs text-gray-400">Establish credit relationships with multiple banks in advance, avoid single financing channel.</span></li>
+                            <li><strong>风险对冲 Risk Hedging：</strong>利用场外期权对冲极端波动风险，保护核心头寸。<br><span class="text-xs text-gray-400">Use OTC options to hedge extreme volatility risk, protect core positions.</span></li>
+                        </ul>
+                    `
+                },
+                airline: {
+                    title: '航空业成本案例 Airline Cost Case',
+                    content: `
+                        <h4 class="font-semibold text-gray-800 mb-3">案例背景 Case Background</h4>
+                        <p class="text-sm text-gray-700 mb-2">H航空公司，主营国内和国际航线，航油成本占总成本约30%。</p>
+                        <div class="text-xs text-gray-400 italic">H Airlines, operating domestic and international routes, jet fuel costs account for ~30% of total costs.</p>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">情景描述 Scenario Description</h4>
+                        <p class="text-sm text-gray-700 mb-2">国际油价持续上涨，航油价格从$90/桶飙升至$120/桶，涨幅33%。</p>
+                        <div class="text-xs text-gray-400 italic">Jet fuel prices surged from $90 to $120 per barrel, up 33%.</p>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">影响分析 Impact Analysis</h4>
+                        <div class="space-y-2 text-sm text-gray-700">
+                            <div><strong>成本结构：</strong>航油成本从每吨¥7000升至¥9240，涨幅32%。</div>
+                            <div><strong>毛利率：</strong>单位成本上升导致毛利率从12%下降至8%，下降4个百分点。</div>
+                            <div><strong>盈利影响：</strong>年营收预计减少¥80亿，净利润减少¥25亿。</div>
+                            <div class="text-xs text-gray-400 italic">Jet fuel cost increased from ¥7,000 to ¥9,240/ton, up 32%. Gross margin declined from 12% to 8%, down 4pp. Revenue expected to decrease by ¥8B, net profit decreased by ¥2.5B.</div>
+                        </div>
+
+                        <h4 class="font-semibold text-gray-800 mb-3">应对措施 Response Actions</h4>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li><strong>票价调整 Fare Adjustment：</strong>分阶段上调燃油附加费，将成本部分转嫁给消费者。<br><span class="text-xs text-gray-400">Gradually increase fuel surcharges to partially pass costs to consumers.</span></li>
+                            <li><strong>套期保值 Hedging：</strong>购买航油看涨期权，锁定燃油成本上限。<br><span class="text-xs text-gray-400">Purchase jet fuel call options to lock in fuel cost ceiling.</span></li>
+                            <li><strong>效率提升 Efficiency Improvement：</strong>优化航线结构，提高飞机燃油效率，降低单位油耗。<br><span class="text-xs text-gray-400">Optimize route structure, improve aircraft fuel efficiency, reduce unit fuel consumption.</span></li>
+                            <li><strong>产品策略 Product Strategy：</strong>推出灵活票价产品，鼓励提前预订锁定价格。<br><span class="text-xs text-gray-400">Launch flexible fare products, encourage advance booking to lock in prices.</span></li>
+                        </ul>
+                    `
+                }
+            };
+
+            caseTitle.textContent = cases[caseType].title;
+            caseContent.innerHTML = cases[caseType].content;
+            caseModal.classList.remove('hidden');
+        }
+
+        // 关闭案例弹窗
+        function closeCaseModal() {
+            const caseModal = document.getElementById('case-modal');
+            caseModal.classList.add('hidden');
+        }
+        
+        // 油价变动模拟
+        function simulateOilChange() {
+            const changePercent = Number(document.getElementById('oilChangeInput').value);
+            updateClientAnalysis();
+            showToast(`情景演示完成：油价变动 ${changePercent > 0 ? '+' : ''}${changePercent}% · 使用预设假设`);
+        }
+
+        // Toast提示
+        function showToast(message) {
+            // 移除现有toast
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        console.log('OilClaw Dashboard initialized');
+        
+    </script>
+</body>
+</html>
